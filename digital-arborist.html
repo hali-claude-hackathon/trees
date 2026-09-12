@@ -240,9 +240,116 @@ footer{margin-top:60px;padding-top:20px;border-top:1px solid var(--line);font-si
   .detail-body{animation:fade .28s ease}
   @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 }
+
+/* ---------- presentation layer ---------- */
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{font-size:16px}
+.wrap{max-width:1240px}
+
+.topbar{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--ground) 90%,transparent);
+  backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.topbar .in{max-width:1240px;margin:0 auto;padding:11px 24px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.topbar .brand{display:flex;align-items:center;gap:9px;font-family:"Bricolage Grotesque",sans-serif;
+  font-weight:700;font-size:15.5px;letter-spacing:-.01em;margin-right:auto}
+.topbar .brand svg{width:18px;height:18px;color:var(--accent)}
+.topbar nav{display:flex;gap:18px;flex-wrap:wrap}
+.topbar nav a{font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink-3);text-decoration:none;padding:3px 0;border-bottom:1.5px solid transparent}
+.topbar nav a:hover{color:var(--accent);border-bottom-color:var(--accent)}
+.topbar nav a:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+section{scroll-margin-top:70px}
+.mast{padding:64px 0 34px}
+.mast h1{font-size:clamp(46px,7.4vw,84px)}
+.mast .lede{font-size:19px;max-width:64ch}
+.sec-head h2{font-size:clamp(26px,3.4vw,34px)}
+.sec-head p{font-size:15.5px}
+
+/* priority summary / filter band */
+.bands{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:34px 0 0}
+@media (max-width:760px){.bands{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.band-card{font:inherit;text-align:left;cursor:pointer;border:1px solid;border-radius:13px;padding:14px 16px;
+  display:flex;flex-direction:column;gap:1px;position:relative;overflow:hidden;transition:transform .12s ease}
+.band-card:hover{transform:translateY(-2px)}
+.band-card:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.band-card::after{content:"";position:absolute;inset:auto 0 0 0;height:3px;background:currentColor;opacity:.55}
+.band-card[aria-pressed="true"]{box-shadow:inset 0 0 0 2px currentColor}
+.band-card .code{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.14em;font-weight:500}
+.band-card .n{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:40px;line-height:1;
+  font-variant-numeric:tabular-nums;margin:4px 0 2px;color:var(--ink)}
+.band-card .lab{font-family:"Bricolage Grotesque",sans-serif;font-weight:600;font-size:14.5px;color:var(--ink)}
+.band-card .sla{font-size:12px;color:var(--ink-2)}
+.filter-note{margin-top:10px;font-size:12.5px;color:var(--ink-3);display:flex;gap:10px;align-items:center;min-height:20px}
+.filter-note button{font:inherit;font-size:12px;background:none;border:1px solid var(--line);border-radius:6px;
+  padding:2px 8px;color:var(--ink-2);cursor:pointer}
+.filter-note button:hover{border-color:var(--accent);color:var(--accent)}
+
+/* queue: severity stripe */
+.q-item{border-left-width:3px;padding-left:9px}
+.q-item.q-b1{border-left-color:var(--p1)}
+.q-item.q-b2{border-left-color:var(--p2)}
+.q-item.q-b3{border-left-color:var(--p3)}
+.q-item.q-b4{border-left-color:var(--p4)}
+.q-item[aria-selected="true"]{border-color:var(--accent)}
+.q-item[aria-selected="true"].q-b1{border-left-color:var(--p1)}
+.q-item[aria-selected="true"].q-b2{border-left-color:var(--p2)}
+.q-item[aria-selected="true"].q-b3{border-left-color:var(--p3)}
+.q-item[aria-selected="true"].q-b4{border-left-color:var(--p4)}
+.q-main .addr{font-size:14.5px}
+.score-chip{font-size:17px}
+
+/* the recommendation, made loud */
+.rec{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;
+  border:1px solid;border-left-width:5px;border-radius:12px;padding:14px 18px;margin-bottom:20px}
+.rec .lead{display:flex;flex-direction:column;gap:1px}
+.rec .cap{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;opacity:.85}
+.rec .big{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:clamp(26px,3.6vw,34px);
+  line-height:1.05;letter-spacing:-.02em}
+.rec .sla{font-size:13.5px;color:var(--ink-2)}
+.rec .num{text-align:right}
+.rec .num .s{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:38px;line-height:1;
+  font-variant-numeric:tabular-nums}
+.rec .num .c{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--ink-2)}
+.rec.r1{color:var(--p1);background:var(--p1-wash);border-color:color-mix(in srgb,var(--p1) 40%,transparent)}
+.rec.r2{color:var(--p2);background:var(--p2-wash);border-color:color-mix(in srgb,var(--p2) 40%,transparent)}
+.rec.r3{color:var(--p3);background:var(--p3-wash);border-color:color-mix(in srgb,var(--p3) 40%,transparent)}
+.rec.r4{color:var(--p4);background:var(--p4-wash);border-color:color-mix(in srgb,var(--p4) 40%,transparent)}
+.rec.r1,.rec.r2,.rec.r3,.rec.r4{border-left-color:currentColor}
+
+/* model at a glance */
+.glance{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media (max-width:860px){.glance{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:520px){.glance{grid-template-columns:1fr}}
+.g-card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:15px 16px;box-shadow:var(--shadow)}
+.g-card .gk{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+.g-card h3{font-size:15.5px;font-weight:600;margin-top:7px}
+.g-card p{font-size:13px;color:var(--ink-2);margin:6px 0 0}
+.g-card .gp{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--ink-3);margin-top:9px;
+  padding-top:9px;border-top:1px solid var(--line-soft);display:block;line-height:1.5}
+@media (min-width:901px){
+  .console > .panel:first-child{position:sticky;top:72px}
+  .queue{max-height:min(560px,calc(100vh - 260px))}
+}
+.hint{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink-3);letter-spacing:.04em}
+
 </style>
 </head>
 <body>
+
+<div class="topbar">
+  <div class="in">
+    <span class="brand">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+        <path d="M12 21V11"/><path d="M12 11c0-4 3-7 8-7 0 5-3 8-8 8Z"/><path d="M12 15c-4 0-7-2-7-6 4 0 7 2 7 6Z"/>
+      </svg>Digital Arborist</span>
+    <nav aria-label="Sections">
+      <a href="#console">Triage console</a>
+      <a href="#pipeline">Pipeline</a>
+      <a href="#model">ML method</a>
+      <a href="#guardrails">Guardrails</a>
+    </nav>
+  </div>
+</div>
 
 <div class="wrap">
 
@@ -263,10 +370,22 @@ footer{margin-top:60px;padding-top:20px;border-top:1px solid var(--line);font-si
   </div>
 </header>
 
+<section id="console">
+  <div class="sec-head" style="margin-bottom:0">
+    <div>
+      <span class="eyebrow">01 &middot; What the model recommends</span>
+      <h2>Today's queue, by suggested priority</h2>
+      <p>Every open request, sorted into the four response bands a dispatcher actually works from. Click a band to filter the queue below.</p>
+    </div>
+  </div>
+  <div class="bands" id="bands"></div>
+  <div class="filter-note" id="fnote"></div>
+</section>
+
 <section>
   <div class="sec-head">
     <div>
-      <span class="eyebrow">01 &middot; The console</span>
+      <span class="eyebrow">02 &middot; The console</span>
       <h2>Triage queue, Thursday 08:14</h2>
       <p>Pick a request to see what the model saw and why it landed where it did. Nothing here is auto-closed &mdash; the arborist can override every score, and every override becomes a training label.</p>
     </div>
@@ -296,7 +415,7 @@ footer{margin-top:60px;padding-top:20px;border-top:1px solid var(--line);font-si
     <div class="panel">
       <div class="panel-head">
         <span class="t">Assessment</span>
-        <span class="eyebrow">model v0.4 &middot; arborist-in-the-loop</span>
+        <span class="hint">&uarr;&darr; to step through &middot; model v0.4</span>
       </div>
       <div class="detail-body" id="detail"></div>
     </div>
@@ -306,7 +425,43 @@ footer{margin-top:60px;padding-top:20px;border-top:1px solid var(--line);font-si
 <section>
   <div class="sec-head">
     <div>
-      <span class="eyebrow">02 &middot; How the score is made</span>
+      <span class="eyebrow">03 &middot; The machine learning, in four cards</span>
+      <h2>What is actually doing the scoring</h2>
+      <p>A multimodal model with three encoders and one ordinal head. Full hyperparameters and evaluation are in the <a href="#model" style="color:var(--accent)">model card below</a>.</p>
+    </div>
+  </div>
+  <div class="glance">
+    <div class="g-card">
+      <div class="gk">Vision</div>
+      <h3>YOLOv8-s + ConvNeXt-Tiny</h3>
+      <p>Detects nine defect classes and lean angle in the resident's photo, then rates severity. Fine-tuned from ImageNet &mdash; there will never be enough tree photos to train from scratch.</p>
+      <span class="gp">imgsz 640 &middot; conf 0.25<br>AdamW 3e-5 &middot; 768-d embedding</span>
+    </div>
+    <div class="g-card">
+      <div class="gk">Language</div>
+      <h3>DistilRoBERTa, two aux heads</h3>
+      <p>Pulls <em>target</em> and <em>tempo</em> out of a short, misspelled sentence &mdash; who is underneath, and is this since-the-storm or since-last-summer.</p>
+      <span class="gp">max_len 256 &middot; lr 2e-5<br>384-d &middot; urgency 0&ndash;3</span>
+    </div>
+    <div class="g-card">
+      <div class="gk">Place</div>
+      <h3>LightGBM over ~40 geo features</h3>
+      <p>The pin turns a hazard into a consequence. Same photo over a footpath and over a field is a different emergency, and only the geotag knows which.</p>
+      <span class="gp">leaves 31 &middot; depth 6 &middot; lr 0.05<br>monotone constraints</span>
+    </div>
+    <div class="g-card">
+      <div class="gk">Decision</div>
+      <h3>Ordinal head, then calibration</h3>
+      <p>P1&ndash;P4 is an ordered scale with asymmetric costs, so the head predicts thresholds rather than classes &mdash; and routes on calibrated probability, never argmax.</p>
+      <span class="gp">CORN loss &middot; under-triage 8&times;<br>isotonic &middot; abstain &lt; 0.85</span>
+    </div>
+  </div>
+</section>
+
+<section id="pipeline">
+  <div class="sec-head">
+    <div>
+      <span class="eyebrow">04 &middot; How the score is made</span>
       <h2>Three encoders, one ordinal head</h2>
       <p>The photo, the sentence and the pin are each weak on their own. A hanging limb over a footpath and a hanging limb over a field are the same photograph and a different emergency &mdash; only the pin knows the difference.</p>
     </div>
@@ -340,10 +495,10 @@ footer{margin-top:60px;padding-top:20px;border-top:1px solid var(--line);font-si
   </div>
 </section>
 
-<section>
+<section id="model">
   <div class="sec-head">
     <div>
-      <span class="eyebrow">03 &middot; Model card</span>
+      <span class="eyebrow">05 &middot; Model card</span>
       <h2>What to train, and with what settings</h2>
       <p>Starting point sized for a municipal dataset &mdash; roughly 30k historical requests, of which maybe 2&ndash;3k get arborist-grade labels. That budget, not the leaderboard, picks the architecture.</p>
     </div>
@@ -411,10 +566,10 @@ footer{margin-top:60px;padding-top:20px;border-top:1px solid var(--line);font-si
   </div>
 </section>
 
-<section>
+<section id="guardrails">
   <div class="sec-head">
     <div>
-      <span class="eyebrow">04 &middot; Before it goes live</span>
+      <span class="eyebrow">06 &middot; Before it goes live</span>
       <h2>The parts that decide whether anyone trusts it</h2>
     </div>
   </div>
@@ -500,11 +655,13 @@ const REQ = [
 
 /* ---------- illustrative photo tiles ---------- */
 function photo(type, detail){
-  const box = (x,y,w,h,label,col) => detail ?
+  const box = (x,y,w,h,label,col) => {
+    const lw = label.length*4.9+8, lx = Math.max(2, Math.min(x, 158-lw));
+    return detail ?
     `<g><rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="${col}" stroke-width="1.6" stroke-dasharray="5 3" rx="2"/>
-     <rect x="${x}" y="${y-11}" width="${label.length*4.9+8}" height="11" rx="2" fill="${col}"/>
-     <text x="${x+4}" y="${y-3}" font-family="IBM Plex Mono, monospace" font-size="7" fill="#fff">${label}</text></g>` :
-    `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="${col}" stroke-width="1.4" stroke-dasharray="4 3" rx="2"/>`;
+     <rect x="${lx}" y="${y-11}" width="${lw}" height="11" rx="2" fill="${col}"/>
+     <text x="${lx+4}" y="${y-3}" font-family="IBM Plex Mono, monospace" font-size="7" fill="#fff">${label}</text></g>` :
+    `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="${col}" stroke-width="1.4" stroke-dasharray="4 3" rx="2"/>`; };
   const C = {limb:"var(--p1)",uproot:"var(--p1)",split:"var(--p2)",deadwood:"var(--p3)",roots:"var(--p3)",clearance:"var(--p4)"}[type];
   const crown = (cx,cy,s,c) => `<g fill="${c||'var(--leaf)'}">
       <ellipse cx="${cx}" cy="${cy}" rx="${26*s}" ry="${21*s}"/>
@@ -568,6 +725,7 @@ function photo(type, detail){
 
 const BAND = {1:["P1","Emergency"],2:["P2","Urgent"],3:["P3","Scheduled"],4:["P4","Routine"]};
 let sel = 0;
+let filter = null;
 
 function routeOf(r, thr){
   if(r.conf < 0.85) return {k:"review", cls:"review", ic:"?", t:"Hold for arborist review",
@@ -582,14 +740,36 @@ function render(){
   const thr = +document.getElementById("thr").value;
   document.getElementById("thrv").textContent = thr;
 
+  // priority band summary + filter
+  const bcount = {1:0,2:0,3:0,4:0};
+  REQ.forEach(r=>bcount[r.band]++);
+  const SLA = {1:"within 4 hours",2:"within 72 hours",3:"within 30 days",4:"next pruning cycle"};
+  document.getElementById("bands").innerHTML = [1,2,3,4].map(b=>
+    `<button class="band-card b${b}" data-b="${b}" aria-pressed="${filter===b}">
+       <span class="code">${BAND[b][0]}</span>
+       <span class="n">${bcount[b]}</span>
+       <span class="lab">${BAND[b][1]}</span>
+       <span class="sla">${SLA[b]}</span></button>`).join("");
+  document.getElementById("bands").querySelectorAll(".band-card").forEach(b=>
+    b.addEventListener("click",()=>{ filter = (filter===+b.dataset.b) ? null : +b.dataset.b; render(); }));
+  document.getElementById("fnote").innerHTML = filter
+    ? `Showing ${BAND[filter][0]} only. <button id="clearf">Show all ${REQ.length}</button>`
+    : `<span>All ${REQ.length} open requests shown.</span>`;
+  const cf = document.getElementById("clearf");
+  if(cf) cf.addEventListener("click",()=>{filter=null;render();});
+
+  if(filter && REQ[sel].band !== filter) sel = REQ.findIndex(r=>r.band===filter);
+
   const q = document.getElementById("queue");
   q.innerHTML = "";
-  let a=0,v=0,s=0;
+  let a=0,v=0,s=0,shown=0;
   REQ.forEach((r,i)=>{
     const rt = routeOf(r,thr);
     if(rt.k==="auto")a++; else if(rt.k==="review")v++; else s++;
+    if(filter && r.band!==filter) return;
+    shown++;
     const li = document.createElement("li");
-    li.innerHTML = `<button class="q-item" role="option" aria-selected="${i===sel}" data-i="${i}">
+    li.innerHTML = `<button class="q-item q-b${r.band}" role="option" aria-selected="${i===sel}" data-i="${i}">
       <span class="q-thumb">${photo(r.photo,false)}</span>
       <span class="q-main">
         <span class="id">${r.id}</span>
@@ -602,6 +782,7 @@ function render(){
       </span></button>`;
     q.appendChild(li);
   });
+  document.getElementById("qcount").textContent = shown + " shown";
   document.getElementById("c-auto").textContent=a;
   document.getElementById("c-rev").textContent=v;
   document.getElementById("c-sch").textContent=s;
@@ -620,7 +801,19 @@ function render(){
 
   const segs = [[0,35,"var(--p4)"],[35,50,"var(--p3)"],[50,85,"var(--p2)"],[85,100,"var(--p1)"]];
 
+  const SLA2 = {1:"Respond within 4 hours",2:"Respond within 72 hours",3:"Respond within 30 days",4:"Next scheduled pruning cycle"};
   document.getElementById("detail").innerHTML = `
+    <div class="rec r${r.band}">
+      <div class="lead">
+        <span class="cap">Suggested priority</span>
+        <span class="big">${BAND[r.band][0]} &middot; ${BAND[r.band][1]}</span>
+        <span class="sla">${SLA2[r.band]} &mdash; ${rt.t.toLowerCase()}</span>
+      </div>
+      <div class="num">
+        <div class="s">${r.score}</div>
+        <div class="c">risk score &middot; conf ${r.conf.toFixed(2)}</div>
+      </div>
+    </div>
     <div class="d-top">
       <div>
         <div class="photo">${photo(r.photo,true)}
@@ -679,6 +872,14 @@ function render(){
     </div>`;
 }
 
+document.addEventListener("keydown",e=>{
+  if(e.target.tagName==="INPUT") return;
+  if(e.key!=="ArrowDown" && e.key!=="ArrowUp") return;
+  const vis = REQ.map((r,i)=>i).filter(i=>!filter || REQ[i].band===filter);
+  const at = vis.indexOf(sel);
+  sel = vis[(at + (e.key==="ArrowDown"?1:vis.length-1)) % vis.length];
+  e.preventDefault(); render();
+});
 document.getElementById("thr").addEventListener("input",render);
 render();
 </script>
