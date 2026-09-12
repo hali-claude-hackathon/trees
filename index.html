@@ -1,0 +1,687 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Prototype ML triage console for HRM tree service requests.">
+<title>Digital Arborist</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+
+<style>
+:root{
+  --ground:#ECEFEA;
+  --surface:#FFFFFF;
+  --surface-2:#F5F7F3;
+  --ink:#131A15;
+  --ink-2:#4C5A51;
+  --ink-3:#7B8A80;
+  --line:#DBE0D9;
+  --line-soft:#E8ECE6;
+  --accent:#2C6B4A;
+  --accent-2:#1F4E36;
+  --accent-wash:#E3EEE7;
+  --p1:#A32E1B;
+  --p2:#9B6A10;
+  --p3:#2F6585;
+  --p4:#6E7B72;
+  --p1-wash:#F7E7E3;
+  --p2-wash:#F7EEDC;
+  --p3-wash:#E3EDF3;
+  --p4-wash:#EAEEEA;
+  --pos:#A84A2A;
+  --neg:#3E6F8E;
+  --shadow:0 1px 2px rgba(19,26,21,.05), 0 8px 24px -14px rgba(19,26,21,.22);
+  --sky-a:#C7D3D8; --sky-b:#E7EDEC; --leaf:#3F7A55; --leaf-2:#2E5C40; --bark:#6B5B4B; --grd:#B9C4B2; --pave:#C9CCC6;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#0E1411;
+    --surface:#161E19;
+    --surface-2:#1B241E;
+    --ink:#E7EDE7;
+    --ink-2:#A3B1A7;
+    --ink-3:#788479;
+    --line:#27322B;
+    --line-soft:#1F2822;
+    --accent:#6ABE8C;
+    --accent-2:#8FD6AA;
+    --accent-wash:#17291F;
+    --p1:#E4735A;
+    --p2:#D9A63F;
+    --p3:#69A8CC;
+    --p4:#8E9C92;
+    --p1-wash:#2B1913;
+    --p2-wash:#2A2111;
+    --p3-wash:#131F27;
+    --p4-wash:#1C231E;
+    --pos:#D98A63;
+    --neg:#7BB2D1;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 28px -16px rgba(0,0,0,.7);
+    --sky-a:#2A3A40; --sky-b:#1B2529; --leaf:#3E7A56; --leaf-2:#2B5B3E; --bark:#4A4038; --grd:#26302A; --pave:#333B36;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0E1411; --surface:#161E19; --surface-2:#1B241E; --ink:#E7EDE7; --ink-2:#A3B1A7; --ink-3:#788479;
+  --line:#27322B; --line-soft:#1F2822; --accent:#6ABE8C; --accent-2:#8FD6AA; --accent-wash:#17291F;
+  --p1:#E4735A; --p2:#D9A63F; --p3:#69A8CC; --p4:#8E9C92;
+  --p1-wash:#2B1913; --p2-wash:#2A2111; --p3-wash:#131F27; --p4-wash:#1C231E;
+  --pos:#D98A63; --neg:#7BB2D1;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 28px -16px rgba(0,0,0,.7);
+  --sky-a:#2A3A40; --sky-b:#1B2529; --leaf:#3E7A56; --leaf-2:#2B5B3E; --bark:#4A4038; --grd:#26302A; --pave:#333B36;
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--ground);
+  color:var(--ink);
+  font-family:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;
+  font-size:15px;
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px 80px}
+h1,h2,h3,h4{font-family:"Bricolage Grotesque","IBM Plex Sans",sans-serif;text-wrap:balance;margin:0;letter-spacing:-.02em}
+.eyebrow{
+  font-family:"IBM Plex Mono",ui-monospace,monospace;
+  font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);
+}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+
+/* ---------- masthead ---------- */
+.mast{padding:52px 0 30px;border-bottom:1px solid var(--line)}
+.mast-top{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.mast h1{font-size:clamp(38px,6vw,64px);font-weight:700;line-height:.98;margin:14px 0 0}
+.mast .lede{max-width:62ch;color:var(--ink-2);margin-top:16px;font-size:17px}
+.leafmark{width:22px;height:22px;flex:none;color:var(--accent)}
+.stats{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px}
+.stat{
+  background:var(--surface);border:1px solid var(--line);border-radius:10px;
+  padding:12px 16px;min-width:150px;flex:1 1 150px;box-shadow:var(--shadow)
+}
+.stat .k{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-family:"IBM Plex Mono",monospace}
+.stat .v{font-family:"Bricolage Grotesque",sans-serif;font-size:26px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.2;margin-top:2px}
+.stat .n{font-size:12.5px;color:var(--ink-2)}
+
+/* ---------- section ---------- */
+section{margin-top:56px}
+.sec-head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:18px}
+.sec-head h2{font-size:clamp(22px,3vw,28px);font-weight:600;margin-top:6px}
+.sec-head p{margin:6px 0 0;color:var(--ink-2);max-width:60ch;font-size:14.5px}
+
+/* ---------- console ---------- */
+.console{display:grid;grid-template-columns:minmax(300px,1fr) minmax(0,1.45fr);gap:16px;align-items:start}
+@media (max-width:900px){.console{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+.panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line-soft);background:var(--surface-2)}
+.panel-head .t{font-family:"Bricolage Grotesque",sans-serif;font-weight:600;font-size:14px}
+
+.queue{list-style:none;margin:0;padding:6px;display:flex;flex-direction:column;gap:4px;max-height:640px;overflow-y:auto}
+.q-item{display:grid;grid-template-columns:64px 1fr auto;gap:12px;align-items:center;width:100%;text-align:left;
+  background:transparent;border:1px solid transparent;border-radius:10px;padding:8px;cursor:pointer;color:inherit;font:inherit}
+.q-item:hover{background:var(--surface-2);border-color:var(--line-soft)}
+.q-item:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.q-item[aria-selected="true"]{background:var(--accent-wash);border-color:var(--accent)}
+.q-main{display:block;min-width:0}
+.q-main .id,.q-main .addr{display:block}
+.q-thumb{display:block;width:64px;height:46px;border-radius:6px;overflow:hidden;background:var(--surface-2);border:1px solid var(--line-soft)}
+.q-thumb svg{display:block;width:100%;height:100%}
+.q-main .id{font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:var(--ink-3);letter-spacing:.03em}
+.q-main .addr{font-size:13.5px;font-weight:500;line-height:1.3}
+.q-main .meta{font-size:11.5px;color:var(--ink-3);display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
+.q-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.score-chip{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;font-size:15px;font-weight:500}
+
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+  padding:3px 8px;border-radius:999px;border:1px solid;font-family:"IBM Plex Mono",monospace;white-space:nowrap}
+.pill::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.b1{color:var(--p1);background:var(--p1-wash);border-color:color-mix(in srgb,var(--p1) 35%,transparent)}
+.b2{color:var(--p2);background:var(--p2-wash);border-color:color-mix(in srgb,var(--p2) 35%,transparent)}
+.b3{color:var(--p3);background:var(--p3-wash);border-color:color-mix(in srgb,var(--p3) 35%,transparent)}
+.b4{color:var(--p4);background:var(--p4-wash);border-color:color-mix(in srgb,var(--p4) 35%,transparent)}
+
+/* threshold control */
+.thr{padding:12px 16px;border-top:1px solid var(--line-soft);background:var(--surface-2);display:flex;flex-direction:column;gap:8px}
+.thr-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.thr label{font-size:12px;color:var(--ink-2)}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.thr-out{display:flex;gap:14px;font-size:11.5px;color:var(--ink-2);flex-wrap:wrap}
+.thr-out b{font-family:"IBM Plex Mono",monospace;color:var(--ink);font-weight:500}
+
+/* ---------- detail ---------- */
+.detail-body{padding:18px}
+.photo{position:relative;border-radius:10px;overflow:hidden;border:1px solid var(--line);background:var(--surface-2)}
+.photo svg{display:block;width:100%;height:auto}
+.photo .exif{position:absolute;left:10px;bottom:10px;display:flex;gap:6px;flex-wrap:wrap}
+.tag{font-family:"IBM Plex Mono",monospace;font-size:10.5px;padding:3px 7px;border-radius:5px;
+  background:color-mix(in srgb,var(--surface) 86%,transparent);border:1px solid var(--line);color:var(--ink-2);backdrop-filter:blur(3px)}
+.d-top{display:grid;grid-template-columns:minmax(0,240px) 1fr;gap:18px}
+@media (max-width:640px){.d-top{grid-template-columns:1fr}}
+.d-id{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.d-addr{font-family:"Bricolage Grotesque",sans-serif;font-size:20px;font-weight:600;margin-top:4px;line-height:1.2}
+.quote{border-left:2px solid var(--line);padding:2px 0 2px 12px;margin:12px 0 0;color:var(--ink-2);font-size:14px}
+.quote .who{display:block;font-size:11.5px;color:var(--ink-3);margin-top:6px;font-family:"IBM Plex Mono",monospace}
+
+.signals{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:20px}
+@media (max-width:760px){.signals{grid-template-columns:1fr}}
+.sig{background:var(--surface-2);border:1px solid var(--line-soft);border-radius:10px;padding:12px}
+.sig h4{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-family:"IBM Plex Mono",monospace;font-weight:400}
+.sig ul{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:7px}
+.sig li{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;align-items:baseline;line-height:1.35}
+.sig li .c{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;color:var(--ink-3);font-size:11.5px;flex:none}
+
+/* score meter */
+.score-block{margin-top:22px;border-top:1px solid var(--line-soft);padding-top:18px}
+.score-top{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.big-score{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:46px;line-height:1;font-variant-numeric:tabular-nums}
+.big-score span{font-size:16px;color:var(--ink-3);font-weight:500}
+.meter{position:relative;margin-top:14px;height:10px;border-radius:5px;overflow:hidden;display:flex;gap:2px;background:var(--surface)}
+.meter i{display:block;height:100%;opacity:.30;flex:1 1 auto;min-width:0}
+.meter i:first-child{border-radius:5px 0 0 5px}
+.meter i:last-child{border-radius:0 5px 5px 0}
+.meter-scale{position:relative;height:22px;margin-top:4px}
+.meter-scale span{position:absolute;transform:translateX(-50%);font-family:"IBM Plex Mono",monospace;font-size:10px;color:var(--ink-3)}
+.needle{position:absolute;top:-4px;width:3px;height:18px;border-radius:2px;background:var(--ink);box-shadow:0 0 0 2px var(--surface)}
+
+/* factor bars */
+.factors{margin-top:20px}
+.factors h4{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-family:"IBM Plex Mono",monospace;font-weight:400;margin-bottom:10px}
+.fbar{display:grid;grid-template-columns:minmax(0,1fr) 176px 44px;gap:10px;align-items:center;padding:3px 4px;border-radius:6px}
+.fbar:hover{background:var(--surface-2)}
+.fbar .fl{font-size:12.5px;line-height:1.3}
+.fbar .fl small{display:block;color:var(--ink-3);font-size:11px;font-family:"IBM Plex Mono",monospace}
+.track{position:relative;height:14px}
+.track::before{content:"";position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:var(--line)}
+.track i{position:absolute;top:2px;height:10px;display:block}
+.track i.p{background:var(--pos);border-radius:0 4px 4px 0}
+.track i.n{background:var(--neg);border-radius:4px 0 0 4px}
+.fbar .fv{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;font-size:12px;text-align:right;color:var(--ink-2)}
+
+.route{margin-top:20px;border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;gap:14px;align-items:flex-start;background:var(--surface-2)}
+.route .ic{width:26px;height:26px;flex:none;border-radius:7px;display:grid;place-items:center;font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:500;color:var(--surface);background:var(--ink)}
+.route.auto .ic{background:var(--p1)}
+.route.review .ic{background:var(--p2)}
+.route.sched .ic{background:var(--p3)}
+.route .rt{font-weight:600;font-size:14px;font-family:"Bricolage Grotesque",sans-serif}
+.route .rd{font-size:12.5px;color:var(--ink-2);margin-top:2px}
+
+/* ---------- pipeline ---------- */
+.pipe{display:grid;gap:12px;grid-template-columns:repeat(5,minmax(0,1fr))}
+@media (max-width:940px){.pipe{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.pipe{grid-template-columns:1fr}}
+.step{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;box-shadow:var(--shadow);position:relative}
+.step .n{font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:var(--accent);letter-spacing:.1em}
+.step h3{font-size:15px;font-weight:600;margin-top:6px}
+.step p{font-size:12.5px;color:var(--ink-2);margin:6px 0 0}
+.step ul{margin:8px 0 0;padding-left:16px;font-size:12px;color:var(--ink-2);display:flex;flex-direction:column;gap:3px}
+
+/* ---------- spec cards ---------- */
+.specs{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.spec{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;box-shadow:var(--shadow)}
+.spec h3{font-size:16px;font-weight:600;display:flex;align-items:center;gap:8px}
+.spec .sub{font-size:12.5px;color:var(--ink-2);margin:6px 0 12px}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+.tblwrap{overflow-x:auto}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+th{font-family:"IBM Plex Mono",monospace;font-weight:400;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+td:first-child{color:var(--ink-2);white-space:nowrap}
+td.v{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;color:var(--ink)}
+tr:last-child td{border-bottom:0}
+
+.notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+.note{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:10px;padding:14px 16px}
+.note h4{font-size:13.5px;font-weight:600;font-family:"Bricolage Grotesque",sans-serif}
+.note p{font-size:12.5px;color:var(--ink-2);margin:6px 0 0}
+
+footer{margin-top:60px;padding-top:20px;border-top:1px solid var(--line);font-size:12px;color:var(--ink-3);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+@media (prefers-reduced-motion:no-preference){
+  .detail-body{animation:fade .28s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<header class="mast">
+  <div class="mast-top">
+    <svg class="leafmark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+      <path d="M12 21V11"/><path d="M12 11c0-4 3-7 8-7 0 5-3 8-8 8Z"/><path d="M12 15c-4 0-7-2-7-6 4 0 7 2 7 6Z"/>
+    </svg>
+    <span class="eyebrow">Halifax Regional Municipality &middot; Urban Forestry &middot; 311 intake</span>
+  </div>
+  <h1>Digital Arborist</h1>
+  <p class="lede">Every tree request arrives with a photo, a GPS pin and a sentence typed by a resident in a hurry. The model reads all three, scores the risk against what stands under the tree, and tells the dispatcher what to do in the next four hours &mdash; not the next four weeks.</p>
+  <div class="stats">
+    <div class="stat"><div class="k">Requests today</div><div class="v">148</div><div class="n">31 storm-related</div></div>
+    <div class="stat"><div class="k">Median triage</div><div class="v">2.4<span style="font-size:14px"> s</span></div><div class="n">was 3.1 days by hand</div></div>
+    <div class="stat"><div class="k">Sent to a human</div><div class="v">17%</div><div class="n">low-confidence abstain band</div></div>
+    <div class="stat"><div class="k">Duplicates merged</div><div class="v">22</div><div class="n">same tree, many callers</div></div>
+  </div>
+</header>
+
+<section>
+  <div class="sec-head">
+    <div>
+      <span class="eyebrow">01 &middot; The console</span>
+      <h2>Triage queue, Thursday 08:14</h2>
+      <p>Pick a request to see what the model saw and why it landed where it did. Nothing here is auto-closed &mdash; the arborist can override every score, and every override becomes a training label.</p>
+    </div>
+  </div>
+
+  <div class="console">
+    <div class="panel">
+      <div class="panel-head">
+        <span class="t">Incoming</span>
+        <span class="eyebrow" id="qcount">6 open</span>
+      </div>
+      <ul class="queue" id="queue" role="listbox" aria-label="Tree service requests"></ul>
+      <div class="thr">
+        <div class="thr-row">
+          <label for="thr">Auto-dispatch above score</label>
+          <span class="mono" id="thrv" style="font-size:13px">85</span>
+        </div>
+        <input type="range" id="thr" min="40" max="100" value="85" step="1">
+        <div class="thr-out">
+          <span>Crew now: <b id="c-auto">1</b></span>
+          <span>Arborist review: <b id="c-rev">1</b></span>
+          <span>Scheduled: <b id="c-sch">4</b></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <span class="t">Assessment</span>
+        <span class="eyebrow">model v0.4 &middot; arborist-in-the-loop</span>
+      </div>
+      <div class="detail-body" id="detail"></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head">
+    <div>
+      <span class="eyebrow">02 &middot; How the score is made</span>
+      <h2>Three encoders, one ordinal head</h2>
+      <p>The photo, the sentence and the pin are each weak on their own. A hanging limb over a footpath and a hanging limb over a field are the same photograph and a different emergency &mdash; only the pin knows the difference.</p>
+    </div>
+  </div>
+  <div class="pipe">
+    <div class="step">
+      <div class="n">STEP 1</div><h3>Intake &amp; gating</h3>
+      <p>Before any model runs, cheap checks that stop wasted work.</p>
+      <ul><li>EXIF GPS vs. parcel layer</li><li>Municipal vs. private ownership</li><li>Duplicate cluster: geohash-7 + image-embedding cosine &gt; 0.92</li></ul>
+    </div>
+    <div class="step">
+      <div class="n">STEP 2</div><h3>Vision branch</h3>
+      <p>Detector finds defects and their targets; classifier rates severity.</p>
+      <ul><li>9 defect classes + lean angle</li><li>Deadwood fraction of crown</li><li>Pooled 768-d embedding</li></ul>
+    </div>
+    <div class="step">
+      <div class="n">STEP 3</div><h3>Text &amp; geo branch</h3>
+      <p>The resident's words give urgency and target; the pin gives consequence.</p>
+      <ul><li>Sentence embedding + urgency head</li><li>Joins the street-tree inventory</li><li>~40 exposure &amp; weather features</li></ul>
+    </div>
+    <div class="step">
+      <div class="n">STEP 4</div><h3>Fusion &amp; ordinal head</h3>
+      <p>P1&ndash;P4 is an ordered scale, so the head predicts thresholds, not classes.</p>
+      <ul><li>Concatenated 1,192-d vector</li><li>Cumulative-link (CORN) head</li><li>Under-triage costs 8&times; over-triage</li></ul>
+    </div>
+    <div class="step">
+      <div class="n">STEP 5</div><h3>Calibrate &amp; route</h3>
+      <p>A probability you can act on, then a decision rule &mdash; not an argmax.</p>
+      <ul><li>Isotonic calibration per band</li><li>Abstain band &rarr; arborist</li><li>Threshold shifts in storm mode</li></ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head">
+    <div>
+      <span class="eyebrow">03 &middot; Model card</span>
+      <h2>What to train, and with what settings</h2>
+      <p>Starting point sized for a municipal dataset &mdash; roughly 30k historical requests, of which maybe 2&ndash;3k get arborist-grade labels. That budget, not the leaderboard, picks the architecture.</p>
+    </div>
+  </div>
+  <div class="specs">
+
+    <div class="spec">
+      <h3>Vision branch</h3>
+      <p class="sub">Two heads on the resident's photo: <em>what is wrong</em> (detection) and <em>how badly</em> (severity). Fine-tuned from ImageNet rather than trained from scratch &mdash; there will never be enough tree photos to do otherwise.</p>
+      <div class="tblwrap"><table>
+        <tr><th>Parameter</th><th>Value</th></tr>
+        <tr><td>Detector</td><td class="v">YOLOv8-s, imgsz 640, conf 0.25, NMS IoU 0.50</td></tr>
+        <tr><td>Classes</td><td class="v">hanging limb, fresh fracture, codominant/included bark, cavity &amp; decay, conk, root-plate lift, sidewalk heave, deadwood, storm snap</td></tr>
+        <tr><td>Severity net</td><td class="v">ConvNeXt-Tiny, 384&times;384, pooled 768-d</td></tr>
+        <tr><td>Optimizer</td><td class="v">AdamW, head 3e-4 / backbone 3e-5, cosine, 5% warmup</td></tr>
+        <tr><td>Schedule</td><td class="v">batch 32, 30 epochs, wd 0.05, label smoothing 0.05, EMA 0.999</td></tr>
+        <tr><td>Augment</td><td class="v">flip, RandomResizedCrop 0.7&ndash;1.0, colour jitter 0.3, motion blur, rain/fog overlay</td></tr>
+        <tr><td>Why</td><td>Citizen photos are handheld, wet, backlit and often taken at night. The weather augmentations matter more than the backbone choice.</td></tr>
+      </table></div>
+    </div>
+
+    <div class="spec">
+      <h3>Text branch</h3>
+      <p class="sub">Short, misspelled, emotional. The job is not sentiment &mdash; it is extracting <em>target</em> ("over my kid's bus stop") and <em>tempo</em> ("since the storm", "about to come down").</p>
+      <div class="tblwrap"><table>
+        <tr><th>Parameter</th><th>Value</th></tr>
+        <tr><td>Encoder</td><td class="v">DistilRoBERTa / MiniLM-L6, 384-d, max_len 256</td></tr>
+        <tr><td>Fine-tune</td><td class="v">lr 2e-5, batch 16, 4 epochs, dropout 0.1</td></tr>
+        <tr><td>Aux heads</td><td class="v">urgency (ordinal 0&ndash;3), target type (multi-label, 7 tags)</td></tr>
+        <tr><td>Cold start</td><td class="v">LLM few-shot extraction to structured JSON, then distil into the encoder once ~1k labels exist</td></tr>
+        <tr><td>Watch for</td><td>Urgency words are a proxy for how assertive the caller is. Cap the text branch's contribution so a calm report of a falling tree still outranks an angry one about a leaf drop.</td></tr>
+      </table></div>
+    </div>
+
+    <div class="spec">
+      <h3>Geo &amp; tabular branch</h3>
+      <p class="sub">The pin is the highest-value signal and the cheapest. It turns a hazard into a consequence by naming what stands underneath.</p>
+      <div class="tblwrap"><table>
+        <tr><th>Feature group</th><th>Examples</th></tr>
+        <tr><td>Target exposure</td><td class="v">distance to sidewalk, road class, transit stop, school/playground, building footprint, parking</td></tr>
+        <tr><td>Asset join</td><td class="v">species, DBH, planting year, last inspection, prior work orders within 50 m</td></tr>
+        <tr><td>Site</td><td class="v">soil volume, slope, coastal exposure, overhead line buffer, ward</td></tr>
+        <tr><td>Weather</td><td class="v">72 h forecast gust, 48 h rainfall, saturation index, freeze&ndash;thaw count</td></tr>
+        <tr><td>Model</td><td class="v">LightGBM &mdash; leaves 31, depth 6, lr 0.05, 800 rounds w/ early stop 50, min_data_in_leaf 40, feature_fraction 0.8, bagging 0.8, L2 1.0</td></tr>
+        <tr><td>Constraints</td><td class="v">monotone: defect severity &uarr;, footfall &uarr;, distance-to-target &darr;</td></tr>
+      </table></div>
+    </div>
+
+    <div class="spec">
+      <h3>Fusion, loss &amp; evaluation</h3>
+      <p class="sub">Recommended first build: freeze the encoders, concatenate, and let gradient boosting do the fusion. It is the most data-efficient option and it explains itself &mdash; both of which matter more here than a point of accuracy.</p>
+      <div class="tblwrap"><table>
+        <tr><th>Parameter</th><th>Value</th></tr>
+        <tr><td>Fusion vector</td><td class="v">768 (image) + 384 (text) + 40 (tabular) = 1,192-d</td></tr>
+        <tr><td>Head A (start)</td><td class="v">LightGBM ordinal &mdash; 3 cumulative binary targets P&ge;2, P&ge;3, P&ge;4</td></tr>
+        <tr><td>Head B (later)</td><td class="v">MLP 1192&rarr;256&rarr;128, GELU, dropout 0.3, CORN loss, end-to-end</td></tr>
+        <tr><td>Class weights</td><td class="v">inverse frequency; cost matrix penalising under-triage 8&times;</td></tr>
+        <tr><td>Calibration</td><td class="v">isotonic regression on a held-out 15%, checked by ECE</td></tr>
+        <tr><td>Primary metric</td><td class="v">quadratic weighted kappa (ordinal agreement)</td></tr>
+        <tr><td>Safety metric</td><td class="v">P1 recall at fixed review capacity; under-triage rate &lt; 2%</td></tr>
+        <tr><td>Splits</td><td class="v">group by tree ID, split by time &mdash; train pre-storm, test post-storm</td></tr>
+      </table></div>
+    </div>
+
+  </div>
+</section>
+
+<section>
+  <div class="sec-head">
+    <div>
+      <span class="eyebrow">04 &middot; Before it goes live</span>
+      <h2>The parts that decide whether anyone trusts it</h2>
+    </div>
+  </div>
+  <div class="notes">
+    <div class="note"><h4>Labels come from work orders</h4><p>Bootstrap from what crews actually did and how fast &mdash; then have arborists re-label a stratified sample of ~2,500 and measure inter-rater agreement first. If two arborists disagree 30% of the time, that is your accuracy ceiling.</p></div>
+    <div class="note"><h4>Reporting is not risk</h4><p>Affluent streets call 311 more. Audit P1 recall per ward and per income decile; a tree's priority must never depend on how many people complained about it.</p></div>
+    <div class="note"><h4>Storm mode</h4><p>After a Fiona-scale event, volume jumps 40&times; and the decision rule must change with it: shift the auto-dispatch threshold, widen the abstain band, and re-rank by target exposure rather than defect severity.</p></div>
+    <div class="note"><h4>Overrides are the product</h4><p>Log every arborist correction with the image and features. Active-learning on low-confidence and high-disagreement cases is worth more than another 10k unlabelled photos.</p></div>
+    <div class="note"><h4>Drift</h4><p>Leaf-on and leaf-off crowns look nothing alike. Monitor embedding drift by month, and retrain seasonally rather than annually.</p></div>
+    <div class="note"><h4>It recommends; it never closes</h4><p>The model produces a priority and a reason. A person dispatches. That line is what makes the audit trail defensible when a limb comes down anyway.</p></div>
+  </div>
+</section>
+
+<footer>
+  <span>Prototype &middot; synthetic requests, illustrative imagery, no live HRM data</span>
+  <span class="mono">digital-arborist v0.4</span>
+</footer>
+</div>
+
+<script>
+const REQ = [
+{
+ id:"TREE-2026-0417", when:"07:52", addr:"6312 Quinpool Rd", ward:"District 7", coords:"44.6462, -63.5991",
+ photo:"limb", conf:0.93, score:94, band:1, sla:"4 hours",
+ text:"Huge branch cracked off in the wind last night and its just hanging there right over the sidewalk by the bus stop. Looks like its about to fall on someone.",
+ who:"Reported via 311 mobile · photo 2.1 MB · EXIF GPS verified",
+ cv:[["Hanging limb, unsupported",0.96],["Fresh fracture surface",0.91],["Limb over paved sidewalk",0.88],["Est. limb mass 60–90 kg",0.74]],
+ nlp:[["Imminent-failure language",0.93],["Pedestrian target named",0.89],["Storm attribution",0.85]],
+ geo:[["Transit stop","18 m"],["Sidewalk beneath","yes"],["Road class","arterial"],["Species / DBH","Norway maple, 68 cm"],["Forecast gust 36 h","68 km/h"],["Prior work orders","2 within 50 m"]],
+ factors:[["Hanging limb with fresh fracture","vision · conf 0.96",30],["Crown overhangs public sidewalk","geo · 0 m clearance",20],["Arterial road + transit stop 18 m","geo · high footfall",13],["Forecast gusts 68 km/h in 36 h","weather",12],["Imminent-failure language","text · conf 0.93",10],["Mature stem, DBH 68 cm","inventory",7],["Repeat failure location","history · 2 orders",4],["Inspected 11 days ago","history",-2]]
+},
+{
+ id:"TREE-2026-0421", when:"08:06", addr:"2 Alderney Dr, Dartmouth", ward:"District 5", coords:"44.6653, -63.5670",
+ photo:"uproot", conf:0.88, score:81, band:2, sla:"72 hours",
+ text:"The big tree at the edge of the lot is leaning way over since the rain and you can see the ground lifting at the base. Cars park right under it every day.",
+ who:"Reported via web form · 3 duplicate reports merged",
+ cv:[["Root-plate lift at base",0.92],["Stem lean 22° from vertical",0.87],["Soil cracking, windward side",0.69],["Vehicles in frame",0.81]],
+ nlp:[["Progressive change described",0.84],["Property target named",0.78],["No injury reported",0.95]],
+ geo:[["Parked vehicles beneath","4 stalls"],["Building setback","6 m"],["48 h rainfall","41 mm"],["Species / DBH","Red maple, 84 cm"],["Sidewalk within 15 m","no"],["Inspection record","none"]],
+ factors:[["Root-plate lift, 22° lean","vision · conf 0.92",28],["Vehicles and building within fall zone","geo",16],["Saturated soil, 41 mm in 48 h","weather",12],["Large stem, DBH 84 cm","inventory",9],["Progressive-failure language","text",7],["Three independent reports","dedupe cluster",5],["Never inspected","history",6],["No pedestrian route beneath","geo",-2]]
+},
+{
+ id:"TREE-2026-0409", when:"06:41", addr:"3455 Chebucto Rd", ward:"District 9", coords:"44.6448, -63.6121",
+ photo:"split", conf:0.81, score:76, band:2, sla:"72 hours",
+ text:"There's a big crack where the trunk splits in two. Its been getting wider all summer. Tree is right beside the bus shelter.",
+ who:"Reported via 311 phone · photo added by agent",
+ cv:[["Codominant union, included bark",0.89],["Vertical crack at union",0.83],["Cavity / decay at union",0.71],["Bus shelter in frame",0.66]],
+ nlp:[["Chronic, not acute",0.88],["Infrastructure target named",0.80],["Widening over time",0.72]],
+ geo:[["Bus shelter","3 m"],["Sidewalk beneath","yes"],["Species / DBH","Silver maple, 71 cm"],["Forecast gust 36 h","68 km/h"],["Last inspection","4 yr 2 mo"],["Overhead line","none"]],
+ factors:[["Codominant union failing","vision · conf 0.89",24],["Overhangs bus shelter and sidewalk","geo",17],["Decay pocket at union","vision · conf 0.71",11],["Forecast gusts 68 km/h","weather",9],["Large stem, DBH 71 cm","inventory",8],["Chronic wording, no acute event","text",5],["Overdue inspection, 4 yr","history",4],["Low deadwood in crown","vision",-2]]
+},
+{
+ id:"TREE-2026-0398", when:"Wed 16:22", addr:"Point Pleasant Park, Cambridge Dr", ward:"District 7", coords:"44.6234, -63.5686",
+ photo:"deadwood", conf:0.79, score:58, band:3, sla:"30 days",
+ text:"Lots of dead branches up top on the big oak near the trail junction, and there's a big mushroom growing out of the trunk.",
+ who:"Reported by park staff · flagged low confidence",
+ cv:[["Deadwood, 34% of crown",0.84],["Fungal fruiting body on stem",0.58],["Butt flare intact",0.77],["Crown over unpaved trail",0.80]],
+ nlp:[["Descriptive, no urgency",0.91],["Decay indicator mentioned",0.86],["Recreational target",0.74]],
+ geo:[["Trail beneath","yes, unpaved"],["Vehicles / structures","none within 40 m"],["Species / DBH","Red oak, 92 cm"],["Heritage tree register","listed"],["Seasonal footfall","moderate"],["Last inspection","1 yr 3 mo"]],
+ factors:[["Deadwood 34% of crown","vision · conf 0.84",19],["Possible decay fungus — needs ground check","vision · conf 0.58",12],["Overhangs used park trail","geo",12],["Heritage oak, DBH 92 cm","inventory",9],["Peak trail season","seasonal",7],["No urgency in report","text",3],["No vehicles or structures at risk","geo",-4]]
+},
+{
+ id:"TREE-2026-0424", when:"08:11", addr:"2588 Agricola St", ward:"District 8", coords:"44.6543, -63.5892",
+ photo:"roots", conf:0.90, score:41, band:3, sla:"30 days",
+ text:"Roots have pushed the sidewalk slab up by about two inches. I can't get the stroller over it and neighbours have tripped.",
+ who:"Reported via 311 mobile · accessibility flag set",
+ cv:[["Sidewalk slab displacement 6 cm",0.91],["Surface root at kerb",0.88],["No crown defect detected",0.86],["Live, full canopy",0.93]],
+ nlp:[["Accessibility barrier",0.92],["Trip incidents reported",0.81],["No tree-failure language",0.94]],
+ geo:[["Footfall band","high"],["School route","140 m"],["Species / DBH","Littleleaf linden, 54 cm"],["Sidewalk condition","fair"],["Crew type","sidewalk, not arborist"],["Overhead line","none"]],
+ factors:[["Sidewalk displacement 6 cm","vision · conf 0.91",18],["Trip hazard on high-footfall walk","geo",14],["Accessibility barrier named","text · conf 0.92",9],["On a school walking route","geo",8],["No structural defect in crown","vision",-6],["Healthy tree, routine growth","inventory",-2]]
+},
+{
+ id:"TREE-2026-0426", when:"08:13", addr:"1490 Bedford Hwy", ward:"District 16", coords:"44.7051, -63.6588",
+ photo:"clearance", conf:0.94, score:23, band:4, sla:"next cycle",
+ text:"Branches are hanging low over my driveway, have to duck the van under them. Can someone trim it back.",
+ who:"Reported via web form",
+ cv:[["Clearance over driveway 2.4 m",0.90],["Live, healthy limbs",0.94],["No defect detected",0.92],["Vehicle access obstructed",0.71]],
+ nlp:[["Convenience request",0.89],["No hazard language",0.95],["Private access named",0.83]],
+ geo:[["Beneath","private driveway"],["Road clearance","4.8 m, compliant"],["Species / DBH","Norway maple, 39 cm"],["Ownership","municipal boulevard"],["Pruning cycle due","7 months"],["Sidewalk beneath","no"]],
+ factors:[["Clearance 2.4 m over driveway","vision · conf 0.90",12],["Blocks private vehicle access","geo",6],["Falls in scheduled pruning cycle","ops",7],["Sightline complaint","text",3],["No defect, healthy live limbs","vision",-5]]
+}
+];
+
+/* ---------- illustrative photo tiles ---------- */
+function photo(type, detail){
+  const box = (x,y,w,h,label,col) => detail ?
+    `<g><rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="${col}" stroke-width="1.6" stroke-dasharray="5 3" rx="2"/>
+     <rect x="${x}" y="${y-11}" width="${label.length*4.9+8}" height="11" rx="2" fill="${col}"/>
+     <text x="${x+4}" y="${y-3}" font-family="IBM Plex Mono, monospace" font-size="7" fill="#fff">${label}</text></g>` :
+    `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="${col}" stroke-width="1.4" stroke-dasharray="4 3" rx="2"/>`;
+  const C = {limb:"var(--p1)",uproot:"var(--p1)",split:"var(--p2)",deadwood:"var(--p3)",roots:"var(--p3)",clearance:"var(--p4)"}[type];
+  const crown = (cx,cy,s,c) => `<g fill="${c||'var(--leaf)'}">
+      <ellipse cx="${cx}" cy="${cy}" rx="${26*s}" ry="${21*s}"/>
+      <ellipse cx="${cx-17*s}" cy="${cy+7*s}" rx="${16*s}" ry="${13*s}"/>
+      <ellipse cx="${cx+17*s}" cy="${cy+6*s}" rx="${17*s}" ry="${14*s}"/>
+      <ellipse cx="${cx+3*s}" cy="${cy-13*s}" rx="${15*s}" ry="${12*s}"/></g>`;
+  let scene = "";
+  if(type==="limb"){
+    scene = `<rect x="0" y="86" width="160" height="8" fill="var(--pave)"/>
+      <g stroke="var(--bark)" stroke-width="5" stroke-linecap="round"><path d="M78 90 L78 44"/></g>
+      ${crown(78,38,.95)}
+      <g stroke="var(--bark)" stroke-width="4" stroke-linecap="round"><path d="M78 52 L104 78"/></g>
+      <ellipse cx="110" cy="80" rx="13" ry="9" fill="var(--leaf-2)"/>
+      ${box(88,48,36,40,"hanging_limb 0.96",C)}`;
+  } else if(type==="uproot"){
+    scene = `<rect x="0" y="88" width="160" height="6" fill="var(--pave)"/>
+      <g transform="rotate(-22 74 88)"><path d="M74 90 L74 40" stroke="var(--bark)" stroke-width="6" stroke-linecap="round"/>${crown(74,36,.95)}</g>
+      <path d="M52 88 q12 -9 26 -3" fill="none" stroke="var(--bark)" stroke-width="4"/>
+      <rect x="46" y="86" width="34" height="8" fill="var(--grd)"/>
+      ${box(44,78,44,18,"root_plate 0.92",C)}`;
+  } else if(type==="split"){
+    scene = `<rect x="0" y="88" width="160" height="6" fill="var(--pave)"/>
+      <path d="M80 92 L80 62" stroke="var(--bark)" stroke-width="7" stroke-linecap="round"/>
+      <path d="M80 64 L64 34" stroke="var(--bark)" stroke-width="5" stroke-linecap="round"/>
+      <path d="M80 64 L97 34" stroke="var(--bark)" stroke-width="5" stroke-linecap="round"/>
+      ${crown(60,30,.62)}${crown(101,30,.62)}
+      <path d="M80 70 L80 56" stroke="#1b1512" stroke-width="2" opacity=".75"/>
+      ${box(68,52,26,24,"union_crack 0.83",C)}`;
+  } else if(type==="deadwood"){
+    scene = `<rect x="0" y="90" width="160" height="4" fill="var(--grd)"/>
+      <path d="M80 92 L80 48" stroke="var(--bark)" stroke-width="7" stroke-linecap="round"/>
+      ${crown(80,42,1.02)}
+      <g stroke="#8b7d6b" stroke-width="2.4" stroke-linecap="round" opacity=".95">
+        <path d="M80 44 L58 24"/><path d="M80 44 L100 22"/><path d="M80 40 L84 16"/><path d="M62 26 L54 20"/></g>
+      <ellipse cx="86" cy="72" rx="6" ry="3.4" fill="#a9885c"/>
+      ${box(50,10,56,30,"deadwood 0.84",C)}`;
+  } else if(type==="roots"){
+    scene = `<rect x="0" y="78" width="160" height="16" fill="var(--pave)"/>
+      <path d="M0 84 L64 84" stroke="var(--surface)" stroke-width="1.4" opacity=".6"/>
+      <path d="M64 86 q14 -12 30 -4 L160 82" fill="none" stroke="var(--pave)" stroke-width="10"/>
+      <path d="M64 84 q14 -12 30 -5" fill="none" stroke="var(--surface)" stroke-width="1.4" opacity=".6"/>
+      <path d="M118 80 L118 44" stroke="var(--bark)" stroke-width="6" stroke-linecap="round"/>
+      ${crown(118,38,.8)}
+      <path d="M112 80 q-14 -4 -22 -2" fill="none" stroke="var(--bark)" stroke-width="4"/>
+      ${box(62,68,44,20,"slab_heave 6cm",C)}`;
+  } else {
+    scene = `<rect x="0" y="84" width="160" height="10" fill="var(--pave)"/>
+      <rect x="8" y="74" width="46" height="12" rx="3" fill="var(--grd)"/>
+      <path d="M126 90 L126 40" stroke="var(--bark)" stroke-width="6" stroke-linecap="round"/>
+      ${crown(122,36,.95)}
+      <g stroke="var(--leaf-2)" stroke-width="3" stroke-linecap="round"><path d="M124 50 L84 62"/><path d="M124 56 L96 70"/></g>
+      ${box(74,50,52,26,"clearance 2.4m",C)}`;
+  }
+  return `<svg viewBox="0 0 160 110" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Illustration of the reported tree condition">
+    <defs><linearGradient id="sky${type}${detail?'d':''}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="var(--sky-a)"/><stop offset="1" stop-color="var(--sky-b)"/></linearGradient></defs>
+    <rect width="160" height="110" fill="url(#sky${type}${detail?'d':''})"/>
+    <rect y="90" width="160" height="20" fill="var(--grd)"/>
+    ${scene}</svg>`;
+}
+
+const BAND = {1:["P1","Emergency"],2:["P2","Urgent"],3:["P3","Scheduled"],4:["P4","Routine"]};
+let sel = 0;
+
+function routeOf(r, thr){
+  if(r.conf < 0.85) return {k:"review", cls:"review", ic:"?", t:"Hold for arborist review",
+    d:`Model confidence ${r.conf.toFixed(2)} sits below the 0.85 abstain floor — the ${r.cv[1][0].toLowerCase()} reading is the weak one. A ground inspection resolves it faster than a better photo would.`};
+  if(r.score >= thr) return {k:"auto", cls:"auto", ic:"!", t:"Dispatch crew now",
+    d:`Score ${r.score} clears the ${thr} auto-dispatch threshold. Target response ${r.sla}. Make-safe crew assigned; full assessment follows.`};
+  return {k:"sched", cls:"sched", ic:"✓", t:`Schedule — ${BAND[r.band][1].toLowerCase()} work`,
+    d:`Below the ${thr} threshold. Queued in the ${BAND[r.band][0]} band with a ${r.sla} target and bundled with nearby work orders in ${r.ward}.`};
+}
+
+function render(){
+  const thr = +document.getElementById("thr").value;
+  document.getElementById("thrv").textContent = thr;
+
+  const q = document.getElementById("queue");
+  q.innerHTML = "";
+  let a=0,v=0,s=0;
+  REQ.forEach((r,i)=>{
+    const rt = routeOf(r,thr);
+    if(rt.k==="auto")a++; else if(rt.k==="review")v++; else s++;
+    const li = document.createElement("li");
+    li.innerHTML = `<button class="q-item" role="option" aria-selected="${i===sel}" data-i="${i}">
+      <span class="q-thumb">${photo(r.photo,false)}</span>
+      <span class="q-main">
+        <span class="id">${r.id}</span>
+        <span class="addr">${r.addr}</span>
+        <span class="meta"><span>${r.when}</span><span class="mono">${r.coords}</span></span>
+      </span>
+      <span class="q-right">
+        <span class="score-chip">${r.score}</span>
+        <span class="pill b${r.band}">${BAND[r.band][0]}</span>
+      </span></button>`;
+    q.appendChild(li);
+  });
+  document.getElementById("c-auto").textContent=a;
+  document.getElementById("c-rev").textContent=v;
+  document.getElementById("c-sch").textContent=s;
+  q.querySelectorAll(".q-item").forEach(b=>b.addEventListener("click",()=>{sel=+b.dataset.i;render();}));
+
+  const r = REQ[sel], rt = routeOf(r,thr);
+  const maxAbs = Math.max(...r.factors.map(f=>Math.abs(f[2])));
+  const fbars = r.factors.map(f=>{
+    const w = Math.abs(f[2])/maxAbs*50;
+    const bar = f[2]>=0 ? `<i class="p" style="left:50%;width:${w}%"></i>` : `<i class="n" style="right:50%;width:${w}%"></i>`;
+    return `<div class="fbar" title="${f[1]}">
+      <span class="fl">${f[0]}<small>${f[1]}</small></span>
+      <span class="track">${bar}</span>
+      <span class="fv">${f[2]>0?"+":""}${f[2]}</span></div>`;
+  }).join("");
+
+  const segs = [[0,35,"var(--p4)"],[35,50,"var(--p3)"],[50,85,"var(--p2)"],[85,100,"var(--p1)"]];
+
+  document.getElementById("detail").innerHTML = `
+    <div class="d-top">
+      <div>
+        <div class="photo">${photo(r.photo,true)}
+          <div class="exif"><span class="tag">${r.coords}</span><span class="tag">${r.when}</span></div>
+        </div>
+      </div>
+      <div>
+        <div class="d-id">
+          <span class="mono" style="font-size:11.5px;color:var(--ink-3)">${r.id}</span>
+          <span class="pill b${r.band}">${BAND[r.band][0]} ${BAND[r.band][1]}</span>
+          <span class="mono" style="font-size:11.5px;color:var(--ink-3)">target ${r.sla}</span>
+        </div>
+        <div class="d-addr">${r.addr}</div>
+        <div class="mono" style="font-size:11.5px;color:var(--ink-3)">${r.ward}</div>
+        <blockquote class="quote">&ldquo;${r.text}&rdquo;<span class="who">${r.who}</span></blockquote>
+      </div>
+    </div>
+
+    <div class="signals">
+      <div class="sig"><h4>Vision &mdash; what the photo shows</h4><ul>
+        ${r.cv.map(c=>`<li><span>${c[0]}</span><span class="c">${c[1].toFixed(2)}</span></li>`).join("")}</ul></div>
+      <div class="sig"><h4>Language &mdash; what was written</h4><ul>
+        ${r.nlp.map(c=>`<li><span>${c[0]}</span><span class="c">${c[1].toFixed(2)}</span></li>`).join("")}</ul></div>
+      <div class="sig"><h4>Place &mdash; what the pin knows</h4><ul>
+        ${r.geo.map(c=>`<li><span>${c[0]}</span><span class="c">${c[1]}</span></li>`).join("")}</ul></div>
+    </div>
+
+    <div class="score-block">
+      <div class="score-top">
+        <div>
+          <div class="eyebrow">Calibrated risk score</div>
+          <div class="big-score">${r.score}<span> / 100</span></div>
+        </div>
+        <div style="text-align:right">
+          <div class="eyebrow">Model confidence</div>
+          <div class="mono" style="font-size:20px;font-weight:500">${r.conf.toFixed(2)}</div>
+        </div>
+      </div>
+      <div class="meter" aria-hidden="true">
+        ${segs.map(s=>`<i style="flex-basis:${s[1]-s[0]}%;background:${s[2]}"></i>`).join("")}
+      </div>
+      <div class="meter-scale">
+        <span class="needle" style="left:${r.score}%"></span>
+        <span style="left:17%">P4 routine</span><span style="left:42%">P3</span><span style="left:67%">P2 urgent</span><span style="left:92%">P1</span>
+      </div>
+    </div>
+
+    <div class="factors">
+      <h4>Contribution to score &mdash; raises risk &rarr; / &larr; lowers it</h4>
+      ${fbars}
+    </div>
+
+    <div class="route ${rt.cls}">
+      <span class="ic" aria-hidden="true">${rt.ic}</span>
+      <div><div class="rt">${rt.t}</div><div class="rd">${rt.d}</div></div>
+    </div>`;
+}
+
+document.getElementById("thr").addEventListener("input",render);
+render();
+</script>
+
+</body>
+</html>
