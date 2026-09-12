@@ -1,0 +1,75 @@
+name: pwa-ci
+
+on:
+  push:
+    paths:
+      - 'pwa/**'
+      - '.github/workflows/pwa-ci.yml'
+  pull_request:
+    paths:
+      - 'pwa/**'
+      - '.github/workflows/pwa-ci.yml'
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: pwa
+
+jobs:
+  build-and-test:
+    name: build + e2e smoke test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: pwa/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Verify the built PWA artefacts
+        run: |
+          test -f dist/sw.js
+          test -f dist/manifest.webmanifest
+          node -e "
+            const fs = require('fs');
+            for (const f of ['icon-192.png', 'icon-512.png', 'icon-maskable-512.png']) {
+              const b = fs.readFileSync('dist/icons/' + f);
+              if (b.subarray(0, 8).toString('hex') !== '89504e470d0a1a0a') throw new Error(f + ' is not a PNG');
+              console.log(f, b.readUInt32BE(16) + 'x' + b.readUInt32BE(20), b.length + ' bytes');
+            }
+          "
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: End-to-end smoke test
+        run: npm run test:e2e
+
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: playwright-report
+          path: pwa/playwright-report/
+          retention-days: 7
+          if-no-files-found: error
+
+      - name: Upload Playwright traces on failure
+        if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: playwright-traces
+          path: pwa/test-results/
+          retention-days: 7
+          if-no-files-found: error

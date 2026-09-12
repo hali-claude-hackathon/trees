@@ -1,0 +1,21 @@
+# Node / PWA
+node_modules/
+pwa/dist/
+pwa/dev-dist/
+*.local
+
+# Playwright artifacts
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+.last-run.json
+
+# Python (existing scraper)
+__pycache__/
+*.py[cod]
+.venv/
+
+# Editors / OS
+.DS_Store
+*.swp
