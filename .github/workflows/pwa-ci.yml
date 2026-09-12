@@ -63,3 +63,13 @@ jobs:
           name: playwright-report
           path: pwa/playwright-report/
           retention-days: 7
+          if-no-files-found: error
+
+      - name: Upload Playwright traces on failure
+        if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: playwright-traces
+          path: pwa/test-results/
+          retention-days: 7
+          if-no-files-found: error

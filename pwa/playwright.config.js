@@ -9,7 +9,10 @@ export default defineConfig({
   workers: 1,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
-  reporter: process.env.CI ? [['github'], ['list']] : [['list']],
+  // The `github` and `list` reporters are stdout-only and write nothing to
+  // disk; only the `html` reporter produces the playwright-report/ directory
+  // that CI uploads as a diagnostic artifact on failure.
+  reporter: process.env.CI ? [['github'], ['html', { open: 'never' }]] : [['list']],
   use: {
     baseURL: DEV_URL,
     trace: 'retain-on-failure',
