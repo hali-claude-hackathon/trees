@@ -91,6 +91,23 @@ completing end to end; a valid manifest whose icons decode at the dimensions
 they claim; and an offline reload of the built app rendering from the
 precached shell.
 
+### Troubleshooting: Chromium won't install or launch
+
+On a Debian/Ubuntu host, `npx playwright install --with-deps chromium` shells
+out to `apt-get` and fails with `sudo: a password is required` if you don't
+have passwordless sudo. Skipping `--with-deps` "succeeds" but leaves Chromium
+missing shared libraries, so it then fails to launch with something like
+`error while loading shared libraries: libglib-2.0.so.0: cannot open shared
+object file`. The normal fix is to let it install the system packages with
+root:
+
+```sh
+sudo npx playwright install --with-deps chromium
+```
+
+CI is unaffected — the GitHub Actions runner already has root, so
+`--with-deps` just works there.
+
 ## How to demo this
 
 1. `npm run build && npm run preview`, then open <http://localhost:4173> in
