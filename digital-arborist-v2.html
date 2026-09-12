@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Digital Arborist</title>
+
+<!-- Fonts: Big Shoulders Display (condensed civic display), IBM Plex Mono (chrome/data), Archivo (body) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=Archivo:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+/* ===========================================
+   THEME — "Storm Watch"
+   Ink-blue night canvas, signal amber, ember red.
+   Change these tokens to restyle the whole deck.
+   =========================================== */
+:root{
+  --ink:#070C10;          /* deepest ground */
+  --ink-2:#0D151B;        /* panel fill */
+  --ink-3:#121C24;        /* raised panel */
+  --fog:#8FA3AE;          /* muted chrome text */
+  --bone:#E8EFF2;         /* primary text */
+  --bone-2:#B9C8D0;       /* secondary text */
+  --amber:#F2A03D;        /* primary accent — signal */
+  --ember:#E2543A;        /* P1 / critical */
+  --sea:#4E9AB8;          /* P3 / cool data */
+  --moss:#6FA97F;         /* affirmative */
+  --hair:rgba(143,163,174,.26);
+
+  --font-display:'Big Shoulders Display',sans-serif;
+  --font-mono:'IBM Plex Mono',monospace;
+  --font-body:Archivo,sans-serif;
+
+  --pad-x:104px;
+  --ease:cubic-bezier(.2,.75,.2,1);
+  --dur:.75s;
+  --stage-bg:#04080B;
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+
+/* ===========================================
+   FIXED 16:9 STAGE — MANDATORY BASE STYLES
+   Slides are authored at 1920x1080 and the whole
+   stage is scaled by JS. Never reflow per device.
+   =========================================== */
+html,body{width:100%;height:100%;margin:0;overflow:hidden;background:var(--stage-bg,#000)}
+.deck-viewport{position:fixed;inset:0;overflow:hidden;background:var(--stage-bg,#000)}
+.deck-stage{position:absolute;left:0;top:0;width:1920px;height:1080px;overflow:hidden;transform-origin:0 0;background:var(--slide-bg,#fff)}
+.slide{position:absolute;inset:0;width:1920px;height:1080px;overflow:hidden;display:block;visibility:hidden;opacity:0;pointer-events:none;background:var(--slide-bg,#fff)}
+.slide.active,.slide.visible{visibility:visible;opacity:1;pointer-events:auto;z-index:1}
+img,video,canvas,svg{max-width:100%;max-height:100%}
+.deck-controls{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:1000}
+@media print{
+  html,body{width:1920px;height:auto;overflow:visible;background:#fff}
+  .deck-viewport{position:static;overflow:visible;background:#fff}
+  .deck-stage{position:static;width:auto;height:auto;transform:none !important;background:none}
+  .slide{position:relative;display:block !important;visibility:visible !important;opacity:1 !important;pointer-events:auto !important;width:1920px;height:1080px;break-after:page;page-break-after:always}
+  .slide:last-child{break-after:auto;page-break-after:auto}
+  .deck-controls{display:none !important}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;transition-duration:.2s !important}
+}
+
+/* ===========================================
+   SLIDE CANVAS + ATMOSPHERE
+   =========================================== */
+.slide{
+  background:
+    radial-gradient(1200px 800px at 78% 10%,rgba(78,154,184,.10),transparent 60%),
+    linear-gradient(160deg,#0A1218 0%,#070C10 55%,#0B1116 100%);
+  color:var(--bone);font-family:var(--font-body);
+}
+/* Wind-contour lines: drawn once on the title, static elsewhere */
+.contours{position:absolute;inset:0;opacity:.42;pointer-events:none}
+.contours path{fill:none;stroke:rgba(143,163,174,.2);stroke-width:1.4}
+.slide.active .contours.draw path{stroke-dasharray:2400;stroke-dashoffset:2400;animation:draw 2.6s var(--ease) forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+
+/* Slow amber scan line — the "something is live" cue */
+.scan{position:absolute;left:0;right:0;top:0;height:2px;pointer-events:none;
+  background:linear-gradient(90deg,transparent,rgba(242,160,61,.45),transparent);animation:sweep 9s linear infinite}
+@keyframes sweep{0%{transform:translateY(0)}100%{transform:translateY(1080px)}}
+
+/* ===========================================
+   PERSISTENT CHROME — top line + foot rule
+   =========================================== */
+.topline{position:absolute;left:var(--pad-x);right:var(--pad-x);top:56px;display:flex;justify-content:space-between;
+  align-items:center;font-family:var(--font-mono);font-size:17px;letter-spacing:.18em;text-transform:uppercase;color:var(--fog)}
+.live{display:flex;align-items:center;gap:11px;color:var(--ember)}
+.live i{width:9px;height:9px;border-radius:50%;background:var(--ember);animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(226,84,58,.5)}50%{opacity:.55;box-shadow:0 0 0 9px rgba(226,84,58,0)}}
+.footline{position:absolute;left:var(--pad-x);right:var(--pad-x);bottom:64px;border-top:1px solid var(--hair);padding-top:20px;
+  display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:16px;letter-spacing:.1em;color:var(--fog)}
+.footline b{color:var(--bone);font-weight:500}
+
+/* ===========================================
+   TYPE SCALE
+   =========================================== */
+.eyebrow{font-family:var(--font-mono);font-size:19px;letter-spacing:.24em;text-transform:uppercase;color:var(--amber)}
+h1{font-family:var(--font-display);font-weight:800;font-size:290px;line-height:.78;text-transform:uppercase;letter-spacing:.004em}
+h1 span{display:block;color:var(--amber)}
+h2{font-family:var(--font-display);font-weight:700;font-size:118px;line-height:.9;text-transform:uppercase;letter-spacing:.006em;margin-top:26px}
+h2 em{font-style:normal;color:var(--amber)}
+h2 s{text-decoration:none;color:var(--ember)}
+.sub{font-size:34px;line-height:1.45;color:var(--bone-2);font-weight:400}
+.sub b{color:var(--bone);font-weight:500}
+.body-area{position:absolute;left:var(--pad-x);right:var(--pad-x);top:230px;bottom:150px}
+
+/* ===========================================
+   REVEAL ANIMATION — staggered on slide entry
+   =========================================== */
+.reveal{opacity:0;transform:translateY(30px);transition:opacity var(--dur) var(--ease),transform var(--dur) var(--ease)}
+.slide.visible .reveal{opacity:1;transform:none}
+.slide.visible .reveal[data-d="1"]{transition-delay:.10s}
+.slide.visible .reveal[data-d="2"]{transition-delay:.20s}
+.slide.visible .reveal[data-d="3"]{transition-delay:.30s}
+.slide.visible .reveal[data-d="4"]{transition-delay:.40s}
+.slide.visible .reveal[data-d="5"]{transition-delay:.50s}
+.slide.visible .reveal[data-d="6"]{transition-delay:.60s}
+.slide.visible .reveal[data-d="7"]{transition-delay:.70s}
+
+/* ===========================================
+   COMPONENTS
+   =========================================== */
+/* Priority ladder (title + output slides) */
+.ladder{display:flex;flex-direction:column;gap:12px}
+.lv{border:1px solid var(--hair);border-left-width:5px;border-radius:4px;padding:16px 20px;display:flex;
+  justify-content:space-between;align-items:baseline;background:rgba(13,21,27,.72)}
+.lv .c{font-family:var(--font-mono);font-size:15px;letter-spacing:.2em;color:var(--fog)}
+.lv .n{font-family:var(--font-display);font-weight:700;font-size:52px;line-height:1}
+.lv.p1{border-left-color:var(--ember);background:rgba(226,84,58,.14)}
+.lv.p1 .c,.lv.p1 .n{color:var(--ember)}
+.lv.p2{border-left-color:var(--amber)}.lv.p2 .n{color:var(--amber)}
+.lv.p3{border-left-color:var(--sea)}.lv.p3 .n{color:var(--sea)}
+.lv.p4{border-left-color:rgba(143,163,174,.5)}.lv.p4 .n{color:var(--fog)}
+
+/* Big stat columns */
+.stats{display:flex;gap:110px}
+.stat .fig{font-family:var(--font-display);font-weight:800;font-size:170px;line-height:.84;letter-spacing:-.01em}
+.stat .fig small{font-size:64px;letter-spacing:0}
+.stat .cap{font-family:var(--font-mono);font-size:17px;letter-spacing:.16em;text-transform:uppercase;color:var(--fog);margin-top:18px;max-width:330px;line-height:1.5}
+.stat.hot .fig{color:var(--ember)}
+.stat.warm .fig{color:var(--amber)}
+
+/* Input / signal cards */
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.card{background:rgba(13,21,27,.8);border:1px solid var(--hair);border-radius:8px;padding:26px 28px;display:flex;flex-direction:column;gap:14px}
+.card .tag{font-family:var(--font-mono);font-size:15px;letter-spacing:.2em;text-transform:uppercase;color:var(--amber)}
+.card .txt{font-size:26px;line-height:1.42;color:var(--bone-2)}
+.card .txt b{color:var(--bone);font-weight:500}
+.card .mono{font-family:var(--font-mono);font-size:22px;color:var(--bone)}
+.card figure{border-radius:6px;overflow:hidden;border:1px solid var(--hair);background:#0A1218}
+.card figure svg{display:block;width:100%;height:auto}
+
+/* Pipeline */
+.pipe{display:flex;align-items:stretch;gap:0}
+.node{flex:1;background:rgba(13,21,27,.8);border:1px solid var(--hair);border-radius:8px;padding:24px 24px 26px;display:flex;flex-direction:column;gap:10px}
+.node.accent{border-color:rgba(242,160,61,.55);background:rgba(242,160,61,.09)}
+.node .k{font-family:var(--font-mono);font-size:14px;letter-spacing:.2em;text-transform:uppercase;color:var(--amber)}
+.node h3{font-family:var(--font-display);font-weight:700;font-size:46px;line-height:.94;text-transform:uppercase;color:var(--bone)}
+.node p{font-size:20px;line-height:1.4;color:var(--bone-2)}
+.node .prm{font-family:var(--font-mono);font-size:15px;line-height:1.6;color:var(--fog);margin-top:auto;padding-top:14px;border-top:1px solid var(--hair)}
+.arrow{width:64px;display:flex;align-items:center;justify-content:center;color:var(--fog);font-size:30px;flex:none}
+
+/* Cost matrix */
+.matrix{display:grid;grid-template-columns:190px repeat(2,1fr);gap:10px;width:820px}
+.matrix div{padding:22px 24px;border:1px solid var(--hair);border-radius:6px;font-size:24px;line-height:1.3;background:rgba(13,21,27,.7)}
+.matrix .hd{font-family:var(--font-mono);font-size:15px;letter-spacing:.16em;text-transform:uppercase;color:var(--fog);background:none;border-color:transparent;padding:8px 4px}
+.matrix .bad{border-color:rgba(226,84,58,.6);background:rgba(226,84,58,.14);color:var(--ember)}
+.matrix .ok{color:var(--bone-2)}
+.matrix strong{display:block;font-family:var(--font-display);font-weight:700;font-size:44px;line-height:1;margin-bottom:8px}
+
+/* Assessment card (demo slide) */
+.assess{background:rgba(13,21,27,.85);border:1px solid var(--hair);border-radius:10px;overflow:hidden}
+.assess .hd{display:flex;justify-content:space-between;align-items:center;padding:16px 24px;border-bottom:1px solid var(--hair);
+  font-family:var(--font-mono);font-size:15px;letter-spacing:.16em;text-transform:uppercase;color:var(--fog)}
+.assess .rec{display:flex;justify-content:space-between;align-items:center;padding:22px 26px;background:rgba(226,84,58,.14);border-bottom:1px solid rgba(226,84,58,.4)}
+.assess .rec .big{font-family:var(--font-display);font-weight:800;font-size:74px;line-height:.9;text-transform:uppercase;color:var(--ember)}
+.assess .rec .cap{font-family:var(--font-mono);font-size:14px;letter-spacing:.2em;text-transform:uppercase;color:rgba(226,84,58,.85)}
+.assess .rec .sc{font-family:var(--font-display);font-weight:800;font-size:86px;line-height:.86;color:var(--ember);text-align:right}
+.assess .rec .sc small{display:block;font-family:var(--font-mono);font-size:13px;letter-spacing:.14em;color:rgba(226,84,58,.8);font-weight:400}
+.fct{padding:18px 26px 22px;display:flex;flex-direction:column;gap:11px}
+.fct .row{display:grid;grid-template-columns:1fr 240px 60px;gap:16px;align-items:center}
+.fct .lb{font-size:21px;line-height:1.25}
+.fct .lb small{display:block;font-family:var(--font-mono);font-size:14px;color:var(--fog)}
+.fct .trk{height:12px;position:relative}
+.fct .trk i{position:absolute;left:0;top:0;height:12px;border-radius:0 4px 4px 0;background:var(--amber)}
+.fct .trk i.neg{background:var(--sea)}
+.fct .vl{font-family:var(--font-mono);font-size:19px;text-align:right;color:var(--bone-2)}
+
+/* Guardrail columns */
+.guards{display:grid;grid-template-columns:repeat(3,1fr);gap:30px}
+.guard{border-top:3px solid var(--amber);padding-top:22px}
+.guard.e{border-top-color:var(--ember)}
+.guard.s{border-top-color:var(--sea)}
+.guard h3{font-family:var(--font-display);font-weight:700;font-size:52px;line-height:.96;text-transform:uppercase;color:var(--bone)}
+.guard p{font-size:23px;line-height:1.46;color:var(--bone-2);margin-top:14px}
+
+/* Closing */
+.close-line{font-family:var(--font-display);font-weight:800;font-size:106px;line-height:.9;text-transform:uppercase}
+.close-line s{text-decoration:none;color:var(--amber)}
+
+/* ===========================================
+   DECK CHROME (outside the slide design system)
+   =========================================== */
+.deck-controls{display:flex;align-items:center;gap:14px;background:rgba(7,12,16,.86);border:1px solid rgba(143,163,174,.3);
+  border-radius:999px;padding:9px 16px;backdrop-filter:blur(8px);font-family:var(--font-mono);font-size:12px;letter-spacing:.12em;color:var(--fog)}
+.deck-controls button{background:none;border:0;color:var(--fog);font:inherit;cursor:pointer;padding:2px 6px;border-radius:4px}
+.deck-controls button:hover{color:var(--amber)}
+.deck-controls button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.dots{display:flex;gap:6px}
+.dots span{width:7px;height:7px;border-radius:50%;background:rgba(143,163,174,.35);cursor:pointer;transition:background .2s,transform .2s}
+.dots span.on{background:var(--amber);transform:scale(1.35)}
+
+/* Inline editing affordances */
+.edit-hotzone{position:fixed;top:0;left:0;width:80px;height:80px;z-index:10000;cursor:pointer}
+.edit-toggle{position:fixed;top:16px;left:16px;z-index:10001;opacity:0;pointer-events:none;transition:opacity .3s ease;
+  background:rgba(7,12,16,.9);border:1px solid rgba(143,163,174,.35);color:var(--bone);border-radius:8px;padding:8px 12px;cursor:pointer;font-size:16px}
+.edit-toggle.show,.edit-toggle.active{opacity:1;pointer-events:auto}
+.edit-toggle.active{border-color:var(--amber);color:var(--amber)}
+body.editing [contenteditable="true"]{outline:1px dashed rgba(242,160,61,.6);outline-offset:3px}
+</style>
+</head>
+<body>
+
+<div class="edit-hotzone" aria-hidden="true"></div>
+<button class="edit-toggle" id="editToggle" title="Edit mode (E)">&#9998; Edit</button>
+
+<div class="deck-viewport">
+<main class="deck-stage" id="deckStage">
+
+<!-- ============ 01 · TITLE ============ -->
+<section class="slide title-slide active">
+  <svg class="contours draw" viewBox="0 0 1920 1080" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M-40 210 C 380 120, 700 320, 1080 220 S 1700 60, 1980 180" style="animation-delay:.1s"/>
+    <path d="M-40 330 C 400 250, 720 440, 1100 340 S 1720 190, 1980 300" style="animation-delay:.25s"/>
+    <path d="M-40 470 C 420 400, 760 600, 1140 490 S 1740 340, 1980 450" style="animation-delay:.4s"/>
+    <path d="M-40 640 C 440 560, 800 780, 1180 660 S 1760 500, 1980 610" style="animation-delay:.55s"/>
+    <path d="M-40 840 C 460 750, 840 980, 1220 850 S 1780 690, 1980 800" style="animation-delay:.7s"/>
+  </svg>
+  <div class="scan"></div>
+  <div class="topline reveal" data-d="1"><span>Halifax Regional Municipality &mdash; Urban Forestry</span>
+    <span class="live"><i></i>Storm intake &mdash; Thursday 08:14</span></div>
+  <div style="position:absolute;left:var(--pad-x);top:250px;width:1180px">
+    <div class="eyebrow reveal" data-d="2">311 tree request triage</div>
+    <h1 class="reveal" data-d="3" style="margin-top:30px">Digital<span>Arborist</span></h1>
+    <p class="sub reveal" data-d="5" style="margin-top:48px;max-width:960px">A photo, a GPS pin and one hurried sentence. Read together, they become a <b>response priority in 2.4 seconds</b> &mdash; instead of three days in a spreadsheet.</p>
+  </div>
+  <div class="ladder" style="position:absolute;right:var(--pad-x);top:250px;width:376px">
+    <div class="lv p1 reveal" data-d="4"><span class="c">P1 &middot; 4 H</span><span class="n">1</span></div>
+    <div class="lv p2 reveal" data-d="5"><span class="c">P2 &middot; 72 H</span><span class="n">2</span></div>
+    <div class="lv p3 reveal" data-d="6"><span class="c">P3 &middot; 30 D</span><span class="n">2</span></div>
+    <div class="lv p4 reveal" data-d="7"><span class="c">P4 &middot; CYCLE</span><span class="n">1</span></div>
+  </div>
+  <div class="footline reveal" data-d="7">
+    <span>TREE-2026-0417 &middot; <b>6312 Quinpool Rd</b> &middot; hanging limb 0.96</span>
+    <span>TreeLine &mdash; Claude Code Hackathon</span></div>
+</section>
+
+<!-- ============ 02 · THE PROBLEM ============ -->
+<section class="slide">
+  <div class="topline"><span>01 &mdash; The bottleneck</span><span>Digital Arborist</span></div>
+  <div class="body-area">
+    <div class="eyebrow reveal" data-d="1">What happens after a storm</div>
+    <h2 class="reveal" data-d="2">The queue<br>buries the <s>risk</s>.</h2>
+    <div class="stats reveal" data-d="4" style="margin-top:90px">
+      <div class="stat hot"><div class="fig">148</div><div class="cap">Tree requests in a single day after a wind event</div></div>
+      <div class="stat warm"><div class="fig">3.1<small> d</small></div><div class="cap">Median time to triage one of them by hand</div></div>
+      <div class="stat"><div class="fig">1</div><div class="cap">Arborist on rotation to read all of them</div></div>
+    </div>
+    <p class="sub reveal" data-d="6" style="margin-top:72px;max-width:1420px">The limb that will come down on a sidewalk is in that list. So is a branch over someone's driveway. <b>Nothing in the queue tells them apart.</b></p>
+  </div>
+  <div class="footline"><span>TreeLine</span><span class="slide-num">02 / 10</span></div>
+</section>
+
+<!-- ============ 03 · WHAT ARRIVES ============ -->
+<section class="slide">
+  <div class="topline"><span>02 &mdash; The raw request</span><span>Digital Arborist</span></div>
+  <div class="body-area">
+    <div class="eyebrow reveal" data-d="1">Every request carries three things</div>
+    <h2 class="reveal" data-d="2">Three weak signals.</h2>
+    <div class="cards reveal" data-d="4" style="margin-top:64px">
+      <div class="card">
+        <span class="tag">01 &mdash; The photo</span>
+        <figure><svg viewBox="0 0 320 150" aria-label="Illustration of a hanging limb over a sidewalk">
+          <defs><linearGradient id="sk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#20303a"/><stop offset="1" stop-color="#16222a"/></linearGradient></defs>
+          <rect width="320" height="150" fill="url(#sk)"/><rect y="124" width="320" height="26" fill="#1d2830"/>
+          <rect y="118" width="320" height="8" fill="#2a3740"/>
+          <path d="M150 128 L150 58" stroke="#4b4036" stroke-width="9" stroke-linecap="round"/>
+          <ellipse cx="150" cy="50" rx="46" ry="34" fill="#2f5c40"/><ellipse cx="118" cy="64" rx="28" ry="21" fill="#2a5239"/><ellipse cx="182" cy="62" rx="29" ry="22" fill="#336546"/>
+          <path d="M150 72 L204 116" stroke="#4b4036" stroke-width="7" stroke-linecap="round"/>
+          <ellipse cx="212" cy="118" rx="21" ry="14" fill="#24492f"/>
+          <rect x="176" y="64" width="66" height="70" fill="none" stroke="#E2543A" stroke-width="2.4" stroke-dasharray="7 4" rx="3"/>
+        </svg></figure>
+        <p class="txt">Handheld, at night, in the rain. The defect is usually in frame &mdash; and so is <b>what it would land on</b>.</p>
+      </div>
+      <div class="card">
+        <span class="tag">02 &mdash; The pin</span>
+        <div class="mono" style="margin-top:4px">44.6462, &minus;63.5991</div>
+        <p class="txt">EXIF coordinates, accurate to a few metres. Joins to the street-tree inventory, the road network, the sidewalk layer, the school catchment, <b>the 72-hour wind forecast</b>.</p>
+        <div class="mono" style="font-size:17px;color:var(--fog);margin-top:auto">SIDEWALK 0 m &middot; TRANSIT STOP 18 m<br>NORWAY MAPLE &middot; DBH 68 cm</div>
+      </div>
+      <div class="card">
+        <span class="tag">03 &mdash; The sentence</span>
+        <p class="txt" style="font-size:27px;color:var(--bone)">&ldquo;Huge branch cracked off in the wind last night and its just hanging there right over the sidewalk by the bus stop.&rdquo;</p>
+        <p class="txt" style="margin-top:auto">Misspelled, urgent, specific. It names <b>the target</b> and <b>the tempo</b> &mdash; the two things a photo can't tell you.</p>
+      </div>
+    </div>
+  </div>
+  <div class="footline"><span>TreeLine</span><span class="slide-num">03 / 10</span></div>
+</section>
+
+<!-- ============ 04 · THE INSIGHT ============ -->
+<section class="slide">
+  <div class="topline"><span>03 &mdash; The insight</span><span>Digital Arborist</span></div>
+  <div class="body-area">
+    <div class="eyebrow reveal" data-d="1">Why the photo alone is not enough</div>
+    <h2 class="reveal" data-d="2">Same photo.<br>Different <s>emergency</s>.</h2>
+    <div class="cards reveal" data-d="4" style="grid-template-columns:1fr 1fr;gap:48px;margin-top:66px;max-width:1400px">
+      <div class="card" style="border-color:rgba(226,84,58,.55);background:rgba(226,84,58,.1)">
+        <span class="tag" style="color:var(--ember)">Over a sidewalk &middot; bus stop 18 m</span>
+        <div style="display:flex;align-items:baseline;gap:24px;margin-top:6px">
+          <span style="font-family:var(--font-display);font-weight:800;font-size:116px;line-height:.86;color:var(--ember)">P1</span>
+          <span style="font-size:30px;color:var(--bone)">Crew dispatched<br>within 4 hours</span>
+        </div>
+      </div>
+      <div class="card">
+        <span class="tag" style="color:var(--fog)">Over an empty field &middot; no target</span>
+        <div style="display:flex;align-items:baseline;gap:24px;margin-top:6px">
+          <span style="font-family:var(--font-display);font-weight:800;font-size:116px;line-height:.86;color:var(--fog)">P4</span>
+          <span style="font-size:30px;color:var(--bone-2)">Next pruning cycle,<br>seven months out</span>
+        </div>
+      </div>
+    </div>
+    <p class="sub reveal" data-d="6" style="margin-top:60px;max-width:1400px">The pixels are identical. <b>Only the pin knows the difference</b> &mdash; which is why this is a multimodal problem and not an image classifier.</p>
+  </div>
+  <div class="footline"><span>TreeLine</span><span class="slide-num">04 / 10</span></div>
+</section>
+
+<!-- ============ 05 · THE MODEL ============ -->
+<section class="slide">
+  <div class="topline"><span>04 &mdash; The model</span><span>Digital Arborist</span></div>
+  <div class="body-area" style="top:200px">
+    <div class="eyebrow reveal" data-d="1">Three encoders, one ordinal head</div>
+    <h2 class="reveal" data-d="2" style="font-size:98px">How the score is made.</h2>
+    <div class="pipe reveal" data-d="4" style="margin-top:56px">
+      <div class="node">
+        <span class="k">Vision</span><h3>YOLOv8-s<br>+ ConvNeXt-T</h3>
+        <p>Nine defect classes, lean angle, deadwood fraction.</p>
+        <span class="prm">imgsz 640 &middot; conf 0.25<br>AdamW 3e-5 &middot; 768-d</span>
+      </div>
+      <div class="arrow">&rarr;</div>
+      <div class="node">
+        <span class="k">Language</span><h3>Distil-<br>RoBERTa</h3>
+        <p>Target and tempo, pulled from one sentence.</p>
+        <span class="prm">max_len 256 &middot; lr 2e-5<br>384-d &middot; urgency 0&ndash;3</span>
+      </div>
+      <div class="arrow">&rarr;</div>
+      <div class="node">
+        <span class="k">Place</span><h3>LightGBM<br>~40 features</h3>
+        <p>Exposure, inventory, weather. Turns hazard into consequence.</p>
+        <span class="prm">leaves 31 &middot; depth 6 &middot; lr 0.05<br>monotone constraints</span>
+      </div>
+      <div class="arrow">&rarr;</div>
+      <div class="node accent">
+        <span class="k">Decision</span><h3>Ordinal<br>head</h3>
+        <p>1,192-d fusion &rarr; calibrated P1&ndash;P4 with an abstain band.</p>
+        <span class="prm">CORN loss &middot; isotonic<br>abstain &lt; 0.85 conf</span>
+      </div>
+    </div>
+    <p class="sub reveal" data-d="6" style="margin-top:46px;font-size:30px;max-width:1560px">Encoders frozen, gradient boosting does the fusion. With ~2,500 arborist-grade labels that beats end-to-end training &mdash; and <b>it explains every score it gives</b>.</p>
+  </div>
+  <div class="footline"><span>TreeLine</span><span class="slide-num">05 / 10</span></div>
+</section>
+
+<!-- ============ 06 · COST ASYMMETRY ============ -->
+<section class="slide">
+  <div class="topline"><span>05 &mdash; Why ordinal, not classes</span><span>Digital Arborist</span></div>
+  <div class="body-area">
+    <div class="eyebrow reveal" data-d="1">The two mistakes are not the same mistake</div>
+    <h2 class="reveal" data-d="2">One error<br>sends a crew.<br><s>One sends nobody.</s></h2>
+    <div class="matrix reveal" data-d="4" style="position:absolute;right:0;top:120px">
+      <div class="hd"></div><div class="hd">Model said</div><div class="hd">Cost</div>
+      <div class="hd" style="align-self:center">Truly P1</div>
+      <div class="bad"><strong>P3</strong>Nobody goes. The limb comes down on the sidewalk.</div>
+      <div class="bad" style="display:flex;align-items:center;font-family:var(--font-display);font-weight:800;font-size:62px">8&times;</div>
+      <div class="hd" style="align-self:center">Truly P3</div>
+      <div class="ok"><strong>P1</strong>A crew drives out for a branch that could have waited.</div>
+      <div class="ok" style="display:flex;align-items:center;font-family:var(--font-display);font-weight:800;font-size:62px;color:var(--fog)">1&times;</div>
+    </div>
+    <p class="sub reveal" data-d="6" style="position:absolute;left:0;bottom:0;max-width:780px">So the head predicts <b>thresholds, not classes</b>, and routes on calibrated probability rather than argmax. Under-triage is the metric that decides whether this ships.</p>
+  </div>
+  <div class="footline"><span>TreeLine</span><span class="slide-num">06 / 10</span></div>
+</section>
+
+<!-- ============ 07 · THE DEMO ============ -->
+<section class="slide">
+  <div class="topline"><span>06 &mdash; Live</span><span class="live"><i></i>Console demo</span></div>
+  <div class="body-area" style="top:190px">
+    <div class="eyebrow reveal" data-d="1">One request, end to end</div>
+    <h2 class="reveal" data-d="2" style="font-size:92px">6312 Quinpool Rd.</h2>
+    <div class="assess reveal" data-d="4" style="margin-top:44px">
+      <div class="hd"><span>TREE-2026-0417 &middot; 44.6462, &minus;63.5991 &middot; 07:52</span><span>MODEL v0.4 &mdash; ARBORIST IN THE LOOP</span></div>
+      <div class="rec">
+        <div><div class="cap">Suggested priority</div><div class="big">P1 &middot; Emergency</div>
+          <div style="font-size:24px;color:var(--bone-2);margin-top:6px">Respond within 4 hours &mdash; dispatch crew now</div></div>
+        <div class="sc">94<small>RISK SCORE &middot; CONF 0.93</small></div>
+      </div>
+      <div class="fct">
+        <div class="row"><span class="lb">Hanging limb with fresh fracture<small>vision &middot; conf 0.96</small></span><span class="trk"><i style="width:100%"></i></span><span class="vl">+30</span></div>
+        <div class="row"><span class="lb">Crown overhangs public sidewalk<small>geo &middot; 0 m clearance</small></span><span class="trk"><i style="width:67%"></i></span><span class="vl">+20</span></div>
+        <div class="row"><span class="lb">Arterial road, transit stop 18 m<small>geo &middot; high footfall</small></span><span class="trk"><i style="width:43%"></i></span><span class="vl">+13</span></div>
+        <div class="row"><span class="lb">Forecast gusts 68 km/h in 36 h<small>weather</small></span><span class="trk"><i style="width:40%"></i></span><span class="vl">+12</span></div>
+        <div class="row"><span class="lb">Inspected 11 days ago<small>history</small></span><span class="trk"><i class="neg" style="width:7%"></i></span><span class="vl">&minus;2</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="footline"><span>Live console &mdash; digital-arborist.html</span><span class="slide-num">07 / 10</span></div>
+</section>
+
+<!-- ============ 08 · THE OUTPUT ============ -->
+<section class="slide">
+  <div class="topline"><span>07 &mdash; What the dispatcher gets</span><span>Digital Arborist</span></div>
+  <div class="body-area">
+    <div class="eyebrow reveal" data-d="1">The whole day, sorted</div>
+    <h2 class="reveal" data-d="2">Four bands.<br>One decision each.</h2>
+    <div class="ladder reveal" data-d="4" style="position:absolute;right:0;top:60px;width:900px;gap:16px">
+      <div class="lv p1" style="padding:26px 30px"><span><span class="c">P1 &middot; EMERGENCY</span><br><span style="font-size:27px;color:var(--bone)">Make-safe crew, within 4 hours</span></span><span class="n" style="font-size:72px">1</span></div>
+      <div class="lv p2" style="padding:26px 30px"><span><span class="c">P2 &middot; URGENT</span><br><span style="font-size:27px;color:var(--bone)">Scheduled inspection, within 72 hours</span></span><span class="n" style="font-size:72px">2</span></div>
+      <div class="lv p3" style="padding:26px 30px"><span><span class="c">P3 &middot; SCHEDULED</span><br><span style="font-size:27px;color:var(--bone)">Work order, within 30 days</span></span><span class="n" style="font-size:72px">2</span></div>
+      <div class="lv p4" style="padding:26px 30px"><span><span class="c">P4 &middot; ROUTINE</span><br><span style="font-size:27px;color:var(--bone-2)">Bundled into the next pruning cycle</span></span><span class="n" style="font-size:72px">1</span></div>
+    </div>
+    <p class="sub reveal" data-d="6" style="position:absolute;left:0;bottom:10px;max-width:760px">Each band carries a service target the city already publishes. The model doesn't invent a new scale &mdash; <b>it fills in the one HRM already uses</b>.</p>
+  </div>
+  <div class="footline"><span>TreeLine</span><span class="slide-num">08 / 10</span></div>
+</section>
+
+<!-- ============ 09 · GUARDRAILS ============ -->
+<section class="slide">
+  <div class="topline"><span>08 &mdash; Before it goes live</span><span>Digital Arborist</span></div>
+  <div class="body-area">
+    <div class="eyebrow reveal" data-d="1">The parts that decide whether anyone trusts it</div>
+    <h2 class="reveal" data-d="2" style="font-size:98px">Three things<br>we will not skip.</h2>
+    <div class="guards reveal" data-d="4" style="margin-top:74px">
+      <div class="guard e">
+        <h3>Reporting<br>is not risk</h3>
+        <p>Affluent streets call 311 more often. We audit P1 recall by ward and income decile. A tree's priority must never depend on how many people complained about it.</p>
+      </div>
+      <div class="guard">
+        <h3>The model<br>can abstain</h3>
+        <p>Below 0.85 confidence it says so and hands the request to an arborist. Roughly 17% of intake. Every override is logged with the image and becomes a training label.</p>
+      </div>
+      <div class="guard s">
+        <h3>It recommends.<br>It never closes</h3>
+        <p>A person dispatches, always. That line is what makes the audit trail defensible on the day a limb comes down anyway &mdash; and it will.</p>
+      </div>
+    </div>
+  </div>
+  <div class="footline"><span>TreeLine</span><span class="slide-num">09 / 10</span></div>
+</section>
+
+<!-- ============ 10 · CLOSE ============ -->
+<section class="slide">
+  <svg class="contours" viewBox="0 0 1920 1080" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M-40 470 C 420 400, 760 600, 1140 490 S 1740 340, 1980 450"/>
+    <path d="M-40 640 C 440 560, 800 780, 1180 660 S 1760 500, 1980 610"/>
+    <path d="M-40 840 C 460 750, 840 980, 1220 850 S 1780 690, 1980 800"/>
+  </svg>
+  <div class="topline"><span>Halifax Regional Municipality &mdash; Urban Forestry</span><span>TreeLine</span></div>
+  <div class="body-area" style="top:250px">
+    <div class="eyebrow reveal" data-d="1">What we are asking for</div>
+    <p class="close-line reveal" data-d="2" style="margin-top:40px">Two years of 311<br>tree requests and<br>the work orders<br><s>they turned into.</s></p>
+    <p class="sub reveal" data-d="5" style="margin-top:48px;max-width:1380px">That is the whole training set. The inventory, the road network and the forecast are already open data. <b>Give us the labels and the rest is engineering.</b></p>
+  </div>
+  <div class="footline"><span>Live console &mdash; digital-arborist.html</span><span>Claude Code Hackathon</span><span class="slide-num">10 / 10</span></div>
+</section>
+
+</main>
+</div>
+
+<!-- Deck chrome: counter, dots, prev/next. Lives outside the 1920x1080 stage. -->
+<nav class="deck-controls" aria-label="Slide navigation">
+  <button id="prevBtn" aria-label="Previous slide">&#8592;</button>
+  <span class="dots" id="dots"></span>
+  <span id="counter">01 / 10</span>
+  <button id="nextBtn" aria-label="Next slide">&#8594;</button>
+</nav>
+
+<script>
+/* ===========================================
+   SLIDE PRESENTATION CONTROLLER
+   Navigation: Arrow keys / Space / PageUp-Down /
+   Home / End / click / swipe / wheel / dots.
+   =========================================== */
+class SlidePresentation {
+  constructor(){
+    this.slides  = Array.from(document.querySelectorAll('.slide'));
+    this.stage   = document.getElementById('deckStage');
+    this.counter = document.getElementById('counter');
+    this.dotsEl  = document.getElementById('dots');
+    this.current = 0;
+    this.buildDots();
+    this.setupStageScale();
+    this.setupKeyboardNav();
+    this.setupPointerNav();
+    this.setupTouchNav();
+    this.show(0);
+  }
+
+  /* Scale the whole 1920x1080 stage to fit the window, letterboxing as needed. */
+  setupStageScale(){
+    const scale = () => {
+      const f = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+      const x = (window.innerWidth  - 1920 * f) / 2;
+      const y = (window.innerHeight - 1080 * f) / 2;
+      this.stage.style.transform = `translate(${x}px, ${y}px) scale(${f})`;
+    };
+    scale();
+    window.addEventListener('resize', scale);
+  }
+
+  buildDots(){
+    this.slides.forEach((_, i) => {
+      const d = document.createElement('span');
+      d.title = 'Slide ' + (i + 1);
+      d.addEventListener('click', () => this.show(i));
+      this.dotsEl.appendChild(d);
+    });
+  }
+
+  setupKeyboardNav(){
+    document.addEventListener('keydown', e => {
+      if (document.body.classList.contains('editing')) return;   // don't navigate while editing text
+      switch(e.key){
+        case 'ArrowRight': case 'ArrowDown': case ' ': case 'PageDown':
+          e.preventDefault(); this.next(); break;
+        case 'ArrowLeft': case 'ArrowUp': case 'PageUp':
+          e.preventDefault(); this.prev(); break;
+        case 'Home': e.preventDefault(); this.show(0); break;
+        case 'End':  e.preventDefault(); this.show(this.slides.length - 1); break;
+      }
+    });
+  }
+
+  setupPointerNav(){
+    document.getElementById('nextBtn').addEventListener('click', () => this.next());
+    document.getElementById('prevBtn').addEventListener('click', () => this.prev());
+    // Click anywhere on the stage advances, unless we're editing or clicking chrome.
+    this.stage.addEventListener('click', e => {
+      if (document.body.classList.contains('editing')) return;
+      if (e.target.closest('.deck-controls')) return;
+      this.next();
+    });
+    // Wheel / trackpad, throttled so one gesture moves one slide.
+    let lock = false;
+    window.addEventListener('wheel', e => {
+      if (lock || document.body.classList.contains('editing')) return;
+      if (Math.abs(e.deltaY) < 24) return;
+      lock = true; setTimeout(() => lock = false, 650);
+      e.deltaY > 0 ? this.next() : this.prev();
+    }, {passive:true});
+  }
+
+  setupTouchNav(){
+    let x0 = null, y0 = null;
+    window.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, {passive:true});
+    window.addEventListener('touchend', e => {
+      if (x0 === null) return;
+      const dx = e.changedTouches[0].clientX - x0;
+      const dy = e.changedTouches[0].clientY - y0;
+      if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy)) dx < 0 ? this.next() : this.prev();
+      x0 = y0 = null;
+    }, {passive:true});
+  }
+
+  next(){ this.show(this.current + 1); }
+  prev(){ this.show(this.current - 1); }
+
+  show(i){
+    this.current = Math.max(0, Math.min(i, this.slides.length - 1));
+    this.slides.forEach((s, n) => {
+      s.classList.toggle('active',  n === this.current);
+      s.classList.toggle('visible', n === this.current);
+    });
+    Array.from(this.dotsEl.children).forEach((d, n) => d.classList.toggle('on', n === this.current));
+    const pad = n => String(n).padStart(2, '0');
+    this.counter.textContent = pad(this.current + 1) + ' / ' + pad(this.slides.length);
+  }
+}
+const deck = new SlidePresentation();
+
+/* ===========================================
+   INLINE TEXT EDITING
+   Hover the top-left corner or press E. Click any
+   text to edit; changes persist in localStorage.
+   =========================================== */
+class InlineEditor {
+  constructor(){
+    this.isActive = false;
+    this.key = 'digital-arborist-v2-edits';
+    this.toggle = document.getElementById('editToggle');
+    this.restore();
+    this.wireHotzone();
+    this.toggle.addEventListener('click', e => { e.stopPropagation(); this.toggleEditMode(); });
+    document.addEventListener('keydown', e => {
+      if ((e.key === 'e' || e.key === 'E') && !e.target.getAttribute('contenteditable')) this.toggleEditMode();
+      if (e.key === 's' && (e.metaKey || e.ctrlKey) && this.isActive){ e.preventDefault(); this.save(); }
+    });
+  }
+  editableNodes(){
+    return document.querySelectorAll('.slide h1, .slide h2, .slide h3, .slide p, .slide .eyebrow, .slide .tag, .slide .cap, .slide .lb, .slide .txt');
+  }
+  wireHotzone(){
+    const hz = document.querySelector('.edit-hotzone');
+    let t = null;
+    const show = () => { clearTimeout(t); this.toggle.classList.add('show'); };
+    const hide = () => { t = setTimeout(() => { if (!this.isActive) this.toggle.classList.remove('show'); }, 400); };
+    hz.addEventListener('mouseenter', show); hz.addEventListener('mouseleave', hide);
+    this.toggle.addEventListener('mouseenter', show); this.toggle.addEventListener('mouseleave', hide);
+    hz.addEventListener('click', () => this.toggleEditMode());
+  }
+  toggleEditMode(){
+    this.isActive = !this.isActive;
+    document.body.classList.toggle('editing', this.isActive);
+    this.toggle.classList.toggle('active', this.isActive);
+    this.toggle.classList.add('show');
+    this.editableNodes().forEach((n, i) => {
+      n.setAttribute('contenteditable', this.isActive);
+      n.dataset.eid = 'n' + i;
+      if (this.isActive) n.addEventListener('blur', () => this.save(), {once:true});
+    });
+    this.toggle.innerHTML = this.isActive ? '&#10003; Done' : '&#9998; Edit';
+    if (!this.isActive) this.save();
+  }
+  save(){
+    const out = {};
+    this.editableNodes().forEach((n, i) => out['n' + i] = n.innerHTML);
+    try { localStorage.setItem(this.key, JSON.stringify(out)); } catch(e){}
+  }
+  restore(){
+    try {
+      const raw = localStorage.getItem(this.key);
+      if (!raw) return;
+      const data = JSON.parse(raw);
+      this.editableNodes().forEach((n, i) => { if (data['n' + i] !== undefined) n.innerHTML = data['n' + i]; });
+    } catch(e){}
+  }
+}
+new InlineEditor();
+</script>
+</body>
+</html>
