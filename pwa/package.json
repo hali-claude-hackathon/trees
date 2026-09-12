@@ -4,6 +4,9 @@
   "version": "0.1.0",
   "type": "module",
   "description": "Offline-first PWA proof of concept for reporting fallen trees in Halifax Regional Municipality.",
+  "engines": {
+    "node": ">=20.19"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
